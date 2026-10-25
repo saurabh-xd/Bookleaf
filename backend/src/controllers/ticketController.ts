@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from "express";
 import prisma from "../config/prisma.js";
 import { throwBadRequest, throwNotFound, throwForbidden } from "../utils/errors.js";
 import { triageTicket, generateDraftResponse } from "../services/aiService.js";
+import { broadcastTicketEvent, broadcastToAdmins } from "../services/sseService.js";
 import type { TicketCategory } from "../types/index.js";
 
 /**
@@ -96,6 +97,11 @@ export const createTicket = async (req: Request, res: Response, next: NextFuncti
         message: description.trim(),
         isInternalNote: false,
       },
+    });
+
+    // 5. Broadcast real-time SSE notification (Admin triage queue & Author ticket list)
+    broadcastTicketEvent(user.id, "TICKET_CREATED", {
+      ticket,
     });
 
     return res.status(201).json({
@@ -321,6 +327,13 @@ export const updateTicket = async (req: Request, res: Response, next: NextFuncti
       },
     });
 
+    // Broadcast real-time update to Author and Admin queue
+    broadcastTicketEvent(existingTicket.authorId, "TICKET_UPDATED", {
+      ticketId: id,
+      ticket: updated,
+      updatedFields: updateData,
+    });
+
     return res.status(200).json({
       success: true,
       message: "Ticket updated successfully",
@@ -387,6 +400,17 @@ export const addMessage = async (req: Request, res: Response, next: NextFunction
       });
     }
 
+    // Broadcast real-time message event (strictly hides internal notes from author)
+    broadcastTicketEvent(
+      ticket.authorId,
+      "NEW_MESSAGE",
+      {
+        ticketId: id,
+        message: newMessage,
+      },
+      { isInternalNote: effectiveInternalNote }
+    );
+
     return res.status(201).json({
       success: true,
       message: effectiveInternalNote ? "Internal note added" : "Response sent successfully",
@@ -436,6 +460,12 @@ export const regenerateDraft = async (req: Request, res: Response, next: NextFun
       data: {
         aiDraftResponse: freshDraft,
       },
+    });
+
+    // Broadcast updated draft to active admin sessions
+    broadcastToAdmins("TICKET_UPDATED", {
+      ticketId: id,
+      aiDraftResponse: updated.aiDraftResponse,
     });
 
     return res.status(200).json({

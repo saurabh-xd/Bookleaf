@@ -11,3 +11,5 @@ export type Priority = "CRITICAL" | "HIGH" | "MEDIUM" | "LOW";
 export type TicketStatus = "OPEN" | "IN_PROGRESS" | "RESOLVED" | "CLOSED";
 
 export type AIProcessingStatus = "PENDING" | "PROCESSING" | "SUCCESS" | "FAILED" | "FALLBACK";
+
+export type SSEEventType = "TICKET_CREATED" | "TICKET_UPDATED" | "NEW_MESSAGE" | "CONNECTED";

@@ -5,6 +5,7 @@ import config from "./config/index.js";
 import authRoutes from "./routes/authRoutes.js";
 import bookRoutes from "./routes/bookRoutes.js";
 import ticketRoutes from "./routes/ticketRoutes.js";
+import eventRoutes from "./routes/eventRoutes.js";
 import { indexKnowledgeBase } from "./services/knowledgeIndexer.js";
 import { errorHandler } from "./middleware/errorHandler.js";
 import { notFoundError } from "./utils/errors.js";
@@ -44,6 +45,9 @@ app.use("/api/books", bookRoutes);
 
 // Support Tickets Routes
 app.use("/api/tickets", ticketRoutes);
+
+// Real-Time Server-Sent Events (SSE) Stream
+app.use("/api/events", eventRoutes);
 
 // Catch 404
 app.use((req, res, next) => {
