@@ -3,9 +3,12 @@
 import React, { useEffect, useState, useCallback } from "react";
 import { useAuth } from "../../context/AuthContext";
 import { api } from "../../lib/api";
-import type { Book, BookSummary } from "../../types/index";
+import type { Book, BookSummary, Ticket } from "../../types/index";
 import { RoyaltySummary } from "./RoyaltySummary";
 import { BookList } from "./BookList";
+import { RaiseTicketModal } from "./RaiseTicketModal";
+import { AuthorTicketList } from "./AuthorTicketList";
+import { AuthorTicketDetail } from "./AuthorTicketDetail";
 import {
   BookOpen,
   LifeBuoy,
@@ -19,29 +22,39 @@ import {
   HelpCircle,
   FileText,
   Clock,
-  ArrowUpRight,
+  MessageSquare,
 } from "lucide-react";
 
 interface AuthorDashboardProps {
-  onOpenTicketModal?: (preselectedBook?: Book | null) => void;
+  lastSSEEvent?: any;
 }
 
-export const AuthorDashboard: React.FC<AuthorDashboardProps> = ({ onOpenTicketModal }) => {
+export const AuthorDashboard: React.FC<AuthorDashboardProps> = ({ lastSSEEvent }) => {
   const { user } = useAuth();
   const [books, setBooks] = useState<Book[]>([]);
   const [summary, setSummary] = useState<BookSummary | null>(null);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [isLoadingBooks, setIsLoadingBooks] = useState<boolean>(true);
   const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
-  const [error, setError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<"catalog" | "policies">("catalog");
+  const [bookError, setBookError] = useState<string | null>(null);
 
-  const loadAuthorData = useCallback(async (isRefresh = false) => {
+  // Tickets state
+  const [tickets, setTickets] = useState<Ticket[]>([]);
+  const [isLoadingTickets, setIsLoadingTickets] = useState<boolean>(true);
+  const [selectedTicket, setSelectedTicket] = useState<Ticket | null>(null);
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState<boolean>(false);
+  const [preselectedBook, setPreselectedBook] = useState<Book | null>(null);
+
+  // Navigation tab
+  const [activeTab, setActiveTab] = useState<"catalog" | "tickets" | "policies">("catalog");
+
+  // Load books
+  const loadBooksData = useCallback(async (isRefresh = false) => {
     if (isRefresh) {
       setIsRefreshing(true);
     } else {
-      setIsLoading(true);
+      setIsLoadingBooks(true);
     }
-    setError(null);
+    setBookError(null);
 
     try {
       const response = await api.books.list();
@@ -50,7 +63,6 @@ export const AuthorDashboard: React.FC<AuthorDashboardProps> = ({ onOpenTicketMo
         if (response.summary) {
           setSummary(response.summary);
         } else {
-          // Fallback computation
           const computedSummary: BookSummary = response.data.reduce(
             (acc, b) => ({
               totalBooks: acc.totalBooks + 1,
@@ -72,29 +84,62 @@ export const AuthorDashboard: React.FC<AuthorDashboardProps> = ({ onOpenTicketMo
       }
     } catch (err: any) {
       console.error("Failed to load author catalog & metrics:", err);
-      setError(err?.message || "Failed to load royalty metrics. Please try again.");
+      setBookError(err?.message || "Failed to load royalty metrics. Please try again.");
     } finally {
-      setIsLoading(false);
+      setIsLoadingBooks(false);
       setIsRefreshing(false);
     }
   }, []);
 
-  useEffect(() => {
-    loadAuthorData();
-  }, [loadAuthorData]);
-
-  const handleRaiseTicket = (book?: Book) => {
-    if (onOpenTicketModal) {
-      onOpenTicketModal(book || null);
-    } else {
-      // Dispatch custom event or alert placeholder until Step 11 modal is wired
-      alert(
-        book
-          ? `Opening ticket creation for book "${book.title}" (ISBN: ${book.isbn})`
-          : "Opening ticket creation modal..."
-      );
+  // Load tickets
+  const loadTickets = useCallback(async () => {
+    setIsLoadingTickets(true);
+    try {
+      const response = await api.tickets.list();
+      if (response.success && response.data) {
+        setTickets(response.data);
+      }
+    } catch (err) {
+      console.error("Failed to load tickets:", err);
+    } finally {
+      setIsLoadingTickets(false);
     }
+  }, []);
+
+  useEffect(() => {
+    loadBooksData();
+    loadTickets();
+  }, [loadBooksData, loadTickets]);
+
+  // Reactive SSE listener: When ticket is updated or created or new message arrives
+  useEffect(() => {
+    if (!lastSSEEvent) return;
+
+    const { type, data } = lastSSEEvent;
+    if (type === "TICKET_CREATED" || type === "TICKET_UPDATED" || type === "NEW_MESSAGE") {
+      loadTickets();
+    }
+  }, [lastSSEEvent, loadTickets]);
+
+  const handleOpenTicketModal = (book?: Book | null) => {
+    setPreselectedBook(book || null);
+    setIsCreateModalOpen(true);
   };
+
+  const handleTicketCreated = (newTicket: Ticket) => {
+    setTickets((prev) => [newTicket, ...prev]);
+    setSelectedTicket(newTicket);
+    setActiveTab("tickets");
+  };
+
+  const handleTicketUpdated = (updatedTicket: Ticket) => {
+    setTickets((prev) => prev.map((t) => (t.id === updatedTicket.id ? updatedTicket : t)));
+    setSelectedTicket(updatedTicket);
+  };
+
+  const activeTicketCount = tickets.filter(
+    (t) => t.status === "OPEN" || t.status === "IN_PROGRESS"
+  ).length;
 
   return (
     <div className="space-y-8">
@@ -155,8 +200,11 @@ export const AuthorDashboard: React.FC<AuthorDashboardProps> = ({ onOpenTicketMo
           <div className="flex flex-wrap items-center gap-3">
             <button
               type="button"
-              onClick={() => loadAuthorData(true)}
-              disabled={isRefreshing || isLoading}
+              onClick={() => {
+                loadBooksData(true);
+                loadTickets();
+              }}
+              disabled={isRefreshing || isLoadingBooks}
               className="inline-flex items-center gap-2 px-3.5 py-2.5 rounded-xl text-xs font-semibold bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-700/80 transition-all disabled:opacity-50"
               title="Refresh sales and metrics"
             >
@@ -168,7 +216,7 @@ export const AuthorDashboard: React.FC<AuthorDashboardProps> = ({ onOpenTicketMo
 
             <button
               type="button"
-              onClick={() => handleRaiseTicket()}
+              onClick={() => handleOpenTicketModal()}
               className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold text-white bg-gradient-to-r from-teal-500 to-emerald-600 hover:from-teal-400 hover:to-emerald-500 shadow-lg shadow-teal-900/30 transition-all hover:scale-[1.02] active:scale-[0.98]"
             >
               <LifeBuoy className="h-4 w-4" />
@@ -179,15 +227,15 @@ export const AuthorDashboard: React.FC<AuthorDashboardProps> = ({ onOpenTicketMo
       </div>
 
       {/* Error Banner */}
-      {error && (
+      {bookError && (
         <div className="p-4 rounded-2xl bg-rose-950/40 border border-rose-800/60 text-rose-300 text-xs flex items-center justify-between">
           <div className="flex items-center gap-2">
             <AlertCircle className="h-4 w-4 text-rose-400 flex-shrink-0" />
-            <span>{error}</span>
+            <span>{bookError}</span>
           </div>
           <button
             type="button"
-            onClick={() => loadAuthorData()}
+            onClick={() => loadBooksData()}
             className="px-3 py-1 rounded-lg bg-rose-900/40 hover:bg-rose-900/60 font-semibold"
           >
             Retry
@@ -196,7 +244,7 @@ export const AuthorDashboard: React.FC<AuthorDashboardProps> = ({ onOpenTicketMo
       )}
 
       {/* Royalty Summary Component */}
-      {isLoading ? (
+      {isLoadingBooks ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 animate-pulse">
           {[1, 2, 3, 4].map((i) => (
             <div key={i} className="h-32 rounded-2xl bg-slate-900/60 border border-slate-800/60" />
@@ -206,19 +254,22 @@ export const AuthorDashboard: React.FC<AuthorDashboardProps> = ({ onOpenTicketMo
         <RoyaltySummary summary={summary} bankLinked={user?.bankDetailsLinked ?? true} />
       )}
 
-      {/* Tabs Switcher: Catalog vs Quick Policies */}
-      <div className="border-b border-slate-800 flex items-center gap-6">
+      {/* Navigation Tabs */}
+      <div className="border-b border-slate-800 flex items-center gap-6 overflow-x-auto">
         <button
           type="button"
-          onClick={() => setActiveTab("catalog")}
-          className={`pb-3 text-xs sm:text-sm font-semibold flex items-center gap-2 border-b-2 transition-colors ${
+          onClick={() => {
+            setActiveTab("catalog");
+            setSelectedTicket(null);
+          }}
+          className={`pb-3 text-xs sm:text-sm font-semibold flex items-center gap-2 border-b-2 whitespace-nowrap transition-colors ${
             activeTab === "catalog"
               ? "border-teal-400 text-teal-300"
               : "border-transparent text-slate-400 hover:text-slate-200"
           }`}
         >
           <BookOpen className="h-4 w-4" />
-          <span>My Books & Distribution Catalog</span>
+          <span>My Books & Distribution</span>
           <span className="px-2 py-0.5 text-[11px] rounded-full bg-slate-800 text-slate-300">
             {books.length}
           </span>
@@ -226,34 +277,80 @@ export const AuthorDashboard: React.FC<AuthorDashboardProps> = ({ onOpenTicketMo
 
         <button
           type="button"
-          onClick={() => setActiveTab("policies")}
-          className={`pb-3 text-xs sm:text-sm font-semibold flex items-center gap-2 border-b-2 transition-colors ${
+          onClick={() => setActiveTab("tickets")}
+          className={`pb-3 text-xs sm:text-sm font-semibold flex items-center gap-2 border-b-2 whitespace-nowrap transition-colors ${
+            activeTab === "tickets"
+              ? "border-teal-400 text-teal-300"
+              : "border-transparent text-slate-400 hover:text-slate-200"
+          }`}
+        >
+          <MessageSquare className="h-4 w-4" />
+          <span>Support Tickets & Chat</span>
+          <span
+            className={`px-2 py-0.5 text-[11px] rounded-full font-bold ${
+              activeTicketCount > 0
+                ? "bg-teal-500/20 text-teal-300 border border-teal-500/30"
+                : "bg-slate-800 text-slate-400"
+            }`}
+          >
+            {tickets.length}
+          </span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => {
+            setActiveTab("policies");
+            setSelectedTicket(null);
+          }}
+          className={`pb-3 text-xs sm:text-sm font-semibold flex items-center gap-2 border-b-2 whitespace-nowrap transition-colors ${
             activeTab === "policies"
               ? "border-teal-400 text-teal-300"
               : "border-transparent text-slate-400 hover:text-slate-200"
           }`}
         >
           <HelpCircle className="h-4 w-4" />
-          <span>Royalty & Publishing Policies FAQ</span>
+          <span>Policies & SLAs</span>
         </button>
       </div>
 
       {/* Tab 1: Book Catalog */}
       {activeTab === "catalog" && (
         <>
-          {isLoading ? (
+          {isLoadingBooks ? (
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 animate-pulse">
               {[1, 2].map((i) => (
                 <div key={i} className="h-64 rounded-2xl bg-slate-900/60 border border-slate-800/60" />
               ))}
             </div>
           ) : (
-            <BookList books={books} onRaiseTicketForBook={handleRaiseTicket} />
+            <BookList books={books} onRaiseTicketForBook={(b) => handleOpenTicketModal(b)} />
           )}
         </>
       )}
 
-      {/* Tab 2: Publishing & Royalty Policies Reference */}
+      {/* Tab 2: Tickets Queue or Selected Ticket Detail */}
+      {activeTab === "tickets" && (
+        <>
+          {selectedTicket ? (
+            <AuthorTicketDetail
+              ticket={selectedTicket}
+              onBack={() => setSelectedTicket(null)}
+              onTicketUpdated={handleTicketUpdated}
+              lastSSEEvent={lastSSEEvent}
+            />
+          ) : (
+            <AuthorTicketList
+              tickets={tickets}
+              isLoading={isLoadingTickets}
+              onSelectTicket={(t) => setSelectedTicket(t)}
+              onOpenCreateModal={() => handleOpenTicketModal()}
+            />
+          )}
+        </>
+      )}
+
+      {/* Tab 3: Publishing Policies FAQ */}
       {activeTab === "policies" && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
           <div className="glass-card rounded-2xl p-5 border border-slate-800/80">
@@ -321,6 +418,15 @@ export const AuthorDashboard: React.FC<AuthorDashboardProps> = ({ onOpenTicketMo
           </div>
         </div>
       )}
+
+      {/* Raise Ticket Modal */}
+      <RaiseTicketModal
+        isOpen={isCreateModalOpen}
+        onClose={() => setIsCreateModalOpen(false)}
+        books={books}
+        preselectedBook={preselectedBook}
+        onTicketCreated={handleTicketCreated}
+      />
     </div>
   );
 };

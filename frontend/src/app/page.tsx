@@ -38,8 +38,8 @@ export default function Home() {
             </div>
           </div>
         ) : user?.role === "AUTHOR" ? (
-          /* Author Portal View (Step 10) */
-          <AuthorDashboard />
+          /* Author Portal View (Step 10-11) */
+          <AuthorDashboard lastSSEEvent={lastEvent} />
         ) : (
           /* Admin Portal Welcome / Triage Teaser (Step 12-13) */
           <div className="space-y-8">
