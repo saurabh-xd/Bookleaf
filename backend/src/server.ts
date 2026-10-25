@@ -3,6 +3,7 @@ import cors from "cors";
 import morgan from "morgan";
 import config from "./config/index.js";
 import authRoutes from "./routes/authRoutes.js";
+import bookRoutes from "./routes/bookRoutes.js";
 import { errorHandler } from "./middleware/errorHandler.js";
 import { notFoundError } from "./utils/errors.js";
 
@@ -35,6 +36,9 @@ app.get("/api/health", (req, res) => {
 
 // Authentication Routes
 app.use("/api/auth", authRoutes);
+
+// Books & Royalty Routes
+app.use("/api/books", bookRoutes);
 
 // Catch 404
 app.use((req, res, next) => {
