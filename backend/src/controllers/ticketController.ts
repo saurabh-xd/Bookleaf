@@ -1,9 +1,11 @@
 import { Request, Response, NextFunction } from "express";
 import prisma from "../config/prisma.js";
 import { throwBadRequest, throwNotFound, throwForbidden } from "../utils/errors.js";
+import { triageTicket, generateDraftResponse } from "../services/aiService.js";
+import type { TicketCategory } from "../types/index.js";
 
 /**
- * Create a new support ticket
+ * Create a new support ticket with automatic AI triage and draft generation
  */
 export const createTicket = async (req: Request, res: Response, next: NextFunction) => {
   try {
@@ -12,8 +14,6 @@ export const createTicket = async (req: Request, res: Response, next: NextFuncti
       bookId,
       subject,
       description,
-      category = "GENERAL_INQUIRY",
-      priority = "MEDIUM",
       fileAttachmentName,
       fileAttachmentUrl,
     } = req.body;
@@ -42,7 +42,24 @@ export const createTicket = async (req: Request, res: Response, next: NextFuncti
     const count = await prisma.ticket.count();
     const ticketNumber = `BL-${1000 + count + 1}`;
 
-    // Create ticket in database
+    // 1. AI Auto-Classification & Dynamic Priority Scoring (minimal token context)
+    const triage = await triageTicket(subject, description);
+
+    // 2. Category-Routed RAG Draft Generation (grounded in BookLeaf KB + live author stats)
+    const aiDraft = await generateDraftResponse({
+      authorName: user.name,
+      bookTitle: book?.title,
+      bookStatus: book?.status,
+      mrp: book?.mrp,
+      copiesSold: book?.totalCopiesSold,
+      royaltyPending: book?.royaltyPending,
+      lastPayoutDate: book?.lastRoyaltyPayoutDate?.toISOString(),
+      subject: subject.trim(),
+      description: description.trim(),
+      category: triage.category,
+    });
+
+    // 3. Persist Ticket in Database
     const ticket = await prisma.ticket.create({
       data: {
         ticketNumber,
@@ -50,9 +67,14 @@ export const createTicket = async (req: Request, res: Response, next: NextFuncti
         bookId: bookId || null,
         subject: subject.trim(),
         description: description.trim(),
-        category,
-        priority,
+        category: triage.category,
+        aiClassifiedCategory: triage.category,
+        priority: triage.priority,
+        aiPriority: triage.priority,
         status: "OPEN",
+        aiDraftResponse: aiDraft,
+        aiConfidenceScore: triage.confidenceScore,
+        aiProcessingStatus: triage.source === "AI_MODEL" ? "SUCCESS" : "FALLBACK",
         fileAttachmentName: fileAttachmentName || null,
         fileAttachmentUrl: fileAttachmentUrl || null,
       },
@@ -66,7 +88,7 @@ export const createTicket = async (req: Request, res: Response, next: NextFuncti
       },
     });
 
-    // Create the initial message in thread from the author
+    // 4. Create initial message in thread from author
     await prisma.ticketMessage.create({
       data: {
         ticketId: ticket.id,
@@ -369,6 +391,59 @@ export const addMessage = async (req: Request, res: Response, next: NextFunction
       success: true,
       message: effectiveInternalNote ? "Internal note added" : "Response sent successfully",
       data: newMessage,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Regenerate AI draft response for an existing ticket (Admin only)
+ * If category was overridden by admin, uses the newly selected category
+ */
+export const regenerateDraft = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { id } = req.params;
+
+    const ticket = await prisma.ticket.findUnique({
+      where: { id },
+      include: {
+        author: true,
+        book: true,
+      },
+    });
+
+    if (!ticket) {
+      return throwNotFound("Ticket not found");
+    }
+
+    // Uses the current ticket category (including admin overrides)
+    const freshDraft = await generateDraftResponse({
+      authorName: ticket.author.name,
+      bookTitle: ticket.book?.title,
+      bookStatus: ticket.book?.status,
+      mrp: ticket.book?.mrp,
+      copiesSold: ticket.book?.totalCopiesSold,
+      royaltyPending: ticket.book?.royaltyPending,
+      lastPayoutDate: ticket.book?.lastRoyaltyPayoutDate?.toISOString(),
+      subject: ticket.subject,
+      description: ticket.description,
+      category: ticket.category as TicketCategory,
+    });
+
+    const updated = await prisma.ticket.update({
+      where: { id },
+      data: {
+        aiDraftResponse: freshDraft,
+      },
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: "AI draft regenerated successfully",
+      data: {
+        aiDraftResponse: updated.aiDraftResponse,
+      },
     });
   } catch (error) {
     next(error);

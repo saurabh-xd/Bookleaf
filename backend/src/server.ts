@@ -5,6 +5,7 @@ import config from "./config/index.js";
 import authRoutes from "./routes/authRoutes.js";
 import bookRoutes from "./routes/bookRoutes.js";
 import ticketRoutes from "./routes/ticketRoutes.js";
+import { indexKnowledgeBase } from "./services/knowledgeIndexer.js";
 import { errorHandler } from "./middleware/errorHandler.js";
 import { notFoundError } from "./utils/errors.js";
 
@@ -53,8 +54,9 @@ app.use((req, res, next) => {
 app.use(errorHandler);
 
 app.listen(config.port, () => {
-  console.log(`🚀 BookLeaf Support API running on port ${config.port}`);
-  console.log(`📡 Health Check: http://localhost:${config.port}/api/health`);
+  console.log(` BookLeaf Support API running on port ${config.port}`);
+  console.log(` Health Check: http://localhost:${config.port}/api/health`);
+  indexKnowledgeBase().catch((err) => console.error("Vector index error:", err));
 });
 
 export default app;

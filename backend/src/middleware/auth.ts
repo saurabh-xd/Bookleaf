@@ -3,13 +3,9 @@ import jwt from "jsonwebtoken";
 import config from "../config/index.js";
 import { throwUnauthorized, throwForbidden, unauthorizedError } from "../utils/errors.js";
 import prisma from "../config/prisma.js";
+import type { AuthUser } from "../types/index.js";
 
-export interface AuthUser {
-  id: string;
-  email: string;
-  role: "AUTHOR" | "ADMIN";
-  name: string;
-}
+export type { AuthUser };
 
 declare global {
   namespace Express {

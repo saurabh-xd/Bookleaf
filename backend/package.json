@@ -15,7 +15,9 @@
     "prisma:studio": "prisma studio"
   },
   "dependencies": {
+    "@ai-sdk/google": "^4.0.105",
     "@prisma/client": "^5.22.0",
+    "ai": "^7.0.153",
     "bcryptjs": "^2.4.3",
     "cors": "^2.8.5",
     "dotenv": "^16.4.7",

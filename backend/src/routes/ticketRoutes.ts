@@ -6,6 +6,7 @@ import {
   getTicketById,
   updateTicket,
   addMessage,
+  regenerateDraft,
 } from "../controllers/ticketController.js";
 import { authenticate, requireRole } from "../middleware/auth.js";
 import { validate } from "../middleware/validate.js";
@@ -20,17 +21,6 @@ const createTicketSchema = z.object({
     bookId: z.string().uuid("Invalid book ID format").nullable().optional(),
     subject: z.string().min(5, "Subject must be at least 5 characters"),
     description: z.string().min(10, "Description must be at least 10 characters"),
-    category: z
-      .enum([
-        "ROYALTY_PAYMENTS",
-        "ISBN_METADATA",
-        "PRINTING_QUALITY",
-        "DISTRIBUTION_AVAILABILITY",
-        "PRODUCTION_UPDATES",
-        "GENERAL_INQUIRY",
-      ])
-      .optional(),
-    priority: z.enum(["CRITICAL", "HIGH", "MEDIUM", "LOW"]).optional(),
     fileAttachmentName: z.string().optional(),
     fileAttachmentUrl: z.string().optional(),
   }),
@@ -65,7 +55,7 @@ const addMessageSchema = z.object({
 router.get("/", getTickets);
 router.get("/:id", getTicketById);
 
-// Author: Create a support ticket
+// Author: Create a support ticket (triggers automatic AI classification, priority scoring & draft generation)
 router.post("/", validate(createTicketSchema), createTicket);
 
 // Author & Admin: Post a message / public response / internal note
@@ -73,5 +63,8 @@ router.post("/:id/messages", validate(addMessageSchema), addMessage);
 
 // Admin-only: Update status, priority, category, or assignment
 router.patch("/:id", requireRole(["ADMIN"]), validate(updateTicketSchema), updateTicket);
+
+// Admin-only: Regenerate AI draft response
+router.post("/:id/generate-draft", requireRole(["ADMIN"]), regenerateDraft);
 
 export default router;

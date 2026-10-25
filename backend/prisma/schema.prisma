@@ -126,3 +126,12 @@ model TicketMessage {
   isInternalNote Boolean  @default(false) // true = Admin internal note (hidden from authors)
   createdAt      DateTime @default(now())
 }
+
+model KnowledgeChunk {
+  id        String                      @id @default(uuid())
+  title     String
+  category  String
+  content   String
+  embedding Unsupported("vector(768)")?
+  createdAt DateTime                    @default(now())
+}
