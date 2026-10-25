@@ -6,6 +6,7 @@ import { api } from "../../lib/api";
 import type { Ticket, TicketStatus, Priority, TicketCategory } from "../../types/index";
 import { UrgencyFilters, type FilterState } from "./UrgencyFilters";
 import { AdminQueue } from "./AdminQueue";
+import { TicketResolutionWorkspace } from "./TicketResolutionWorkspace";
 import {
   ShieldAlert,
   Inbox,
@@ -41,6 +42,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   const [tickets, setTickets] = useState<Ticket[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
+  const [selectedTicket, setSelectedTicket] = useState<Ticket | null>(null);
   const [incomingAlert, setIncomingAlert] = useState<{
     ticketId: string;
     ticketNumber: string;
@@ -92,7 +94,6 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
     const { type, data } = lastSSEEvent;
 
     if (type === "TICKET_CREATED") {
-      // Flash incoming ticket notification banner
       setIncomingAlert({
         ticketId: data.id || data.ticket?.id,
         ticketNumber: data.ticketNumber || data.ticket?.ticketNumber || "TICK-NEW",
@@ -100,7 +101,6 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
         priority: data.priority || data.ticket?.priority || "MEDIUM",
         authorName: data.author?.name || data.ticket?.author?.name || "Author",
       });
-      // Refresh tickets list
       loadTickets(true);
     } else if (type === "TICKET_UPDATED" || type === "NEW_MESSAGE") {
       loadTickets(true);
@@ -141,19 +141,11 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   const filteredTickets = useMemo(() => {
     return tickets
       .filter((t) => {
-        // Status filter
         if (filters.status !== "ALL" && t.status !== filters.status) return false;
-
-        // Category filter
         if (filters.category !== "ALL" && t.category !== filters.category) return false;
-
-        // Priority filter
         if (filters.priority !== "ALL" && t.priority !== filters.priority) return false;
-
-        // Breached only preset
         if (filters.breachedOnly && !isTicketBreached(t)) return false;
 
-        // Search query
         if (filters.search) {
           const q = filters.search.toLowerCase();
           const matchesTicketNum = t.ticketNumber.toLowerCase().includes(q);
@@ -187,10 +179,29 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   }, [tickets, filters, isTicketBreached]);
 
   const handleTicketClick = (ticket: Ticket) => {
+    setSelectedTicket(ticket);
     if (onSelectTicket) {
       onSelectTicket(ticket);
     }
   };
+
+  // If a ticket is currently open in resolution workspace, render that view!
+  if (selectedTicket) {
+    return (
+      <TicketResolutionWorkspace
+        ticket={selectedTicket}
+        onBack={() => {
+          setSelectedTicket(null);
+          loadTickets(true);
+        }}
+        onTicketUpdated={(updated) => {
+          setTickets((prev) => prev.map((t) => (t.id === updated.id ? updated : t)));
+          setSelectedTicket(updated);
+        }}
+        lastSSEEvent={lastSSEEvent}
+      />
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -219,7 +230,9 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
               type="button"
               onClick={() => {
                 const target = tickets.find((t) => t.id === incomingAlert.ticketId);
-                if (target && onSelectTicket) onSelectTicket(target);
+                if (target) {
+                  setSelectedTicket(target);
+                }
                 setIncomingAlert(null);
               }}
               className="px-3 py-1.5 rounded-xl bg-amber-500 text-slate-950 text-xs font-bold hover:bg-amber-400 transition-colors"
