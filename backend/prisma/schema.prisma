@@ -1,0 +1,128 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum Role {
+  AUTHOR
+  ADMIN
+}
+
+enum TicketCategory {
+  ROYALTY_PAYMENTS
+  ISBN_METADATA
+  PRINTING_QUALITY
+  DISTRIBUTION_AVAILABILITY
+  PRODUCTION_UPDATES
+  GENERAL_INQUIRY
+}
+
+enum Priority {
+  CRITICAL
+  HIGH
+  MEDIUM
+  LOW
+}
+
+enum TicketStatus {
+  OPEN
+  IN_PROGRESS
+  RESOLVED
+  CLOSED
+}
+
+model User {
+  id                String          @id @default(uuid())
+  authorCode        String?         @unique // e.g. AUTH001
+  email             String          @unique
+  passwordHash      String
+  name              String
+  role              Role            @default(AUTHOR)
+  phone             String?
+  city              String?
+  joinedDate        DateTime?
+  bankDetailsLinked Boolean         @default(true)
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+
+  books             Book[]
+  tickets           Ticket[]        @relation("AuthorTickets")
+  assignedTickets   Ticket[]        @relation("AdminAssignedTickets")
+  messages          TicketMessage[]
+}
+
+model Book {
+  id                    String    @id @default(uuid())
+  bookCode              String?   @unique // e.g. BK001
+  authorId              String
+  author                User      @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  title                 String
+  isbn                  String?
+  genre                 String
+  publicationDate       DateTime?
+  status                String    // e.g. "Published & Live", "In Production - Cover Design"
+  mrp                   Float?
+  authorRoyaltyPerCopy  Float?
+  totalCopiesSold       Int       @default(0)
+  totalRoyaltyEarned    Float     @default(0)
+  royaltyPaid           Float     @default(0)
+  royaltyPending        Float     @default(0)
+  lastRoyaltyPayoutDate DateTime?
+  printPartner          String?
+  availableOn           String[]  @default([])
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  tickets               Ticket[]
+}
+
+model Ticket {
+  id                    String          @id @default(uuid())
+  ticketNumber          String          @unique // e.g. BL-1001
+  authorId              String
+  author                User            @relation("AuthorTickets", fields: [authorId], references: [id], onDelete: Cascade)
+  bookId                String?
+  book                  Book?           @relation(fields: [bookId], references: [id], onDelete: SetNull)
+  subject               String
+  description           String
+  
+  category              TicketCategory
+  aiClassifiedCategory  TicketCategory?
+  isCategoryOverridden  Boolean         @default(false)
+
+  priority              Priority
+  aiPriority            Priority?
+  isPriorityOverridden  Boolean         @default(false)
+
+  status                TicketStatus    @default(OPEN)
+  
+  assignedAdminId       String?
+  assignedAdmin         User?           @relation("AdminAssignedTickets", fields: [assignedAdminId], references: [id], onDelete: SetNull)
+
+  aiDraftResponse       String?
+  aiConfidenceScore     Float?
+  aiProcessingStatus    String          @default("PENDING") // PENDING, SUCCESS, FALLBACK, FAILED
+  
+  fileAttachmentUrl     String?
+  fileAttachmentName    String?
+
+  createdAt             DateTime        @default(now())
+  updatedAt             DateTime        @updatedAt
+
+  messages              TicketMessage[]
+}
+
+model TicketMessage {
+  id             String   @id @default(uuid())
+  ticketId       String
+  ticket         Ticket   @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  senderId       String
+  sender         User     @relation(fields: [senderId], references: [id], onDelete: Cascade)
+  message        String
+  isInternalNote Boolean  @default(false) // true = Admin internal note (hidden from authors)
+  createdAt      DateTime @default(now())
+}
