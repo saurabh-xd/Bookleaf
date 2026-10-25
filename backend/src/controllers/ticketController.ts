@@ -184,7 +184,8 @@ export const getTickets = async (req: Request, res: Response, next: NextFunction
 };
 
 /**
- * Get single ticket details
+ * Get single ticket details and conversation thread
+ * Strips internal notes for Authors; preserves internal notes for Admins
  */
 export const getTicketById = async (req: Request, res: Response, next: NextFunction) => {
   try {
@@ -209,6 +210,14 @@ export const getTicketById = async (req: Request, res: Response, next: NextFunct
         assignedAdmin: {
           select: { id: true, name: true, email: true },
         },
+        messages: {
+          include: {
+            sender: {
+              select: { id: true, name: true, email: true, role: true },
+            },
+          },
+          orderBy: { createdAt: "asc" },
+        },
       },
     });
 
@@ -221,9 +230,20 @@ export const getTicketById = async (req: Request, res: Response, next: NextFunct
       return throwForbidden("You cannot view this ticket");
     }
 
+    // Filter internal notes if viewer is an author
+    const sanitizedMessages = ticket.messages.filter((msg) => {
+      if (user.role === "AUTHOR") {
+        return !msg.isInternalNote;
+      }
+      return true;
+    });
+
     return res.status(200).json({
       success: true,
-      data: ticket,
+      data: {
+        ...ticket,
+        messages: sanitizedMessages,
+      },
     });
   } catch (error) {
     next(error);
@@ -283,6 +303,72 @@ export const updateTicket = async (req: Request, res: Response, next: NextFuncti
       success: true,
       message: "Ticket updated successfully",
       data: updated,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Add a message to ticket (Author reply, Admin public reply, or Admin internal note)
+ */
+export const addMessage = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const user = req.user!;
+    const { id } = req.params;
+    const { message, isInternalNote = false } = req.body;
+
+    if (!message || !message.trim()) {
+      return throwBadRequest("Message content is required");
+    }
+
+    const ticket = await prisma.ticket.findUnique({
+      where: { id },
+    });
+
+    if (!ticket) {
+      return throwNotFound("Ticket not found");
+    }
+
+    // Reject message if ticket is CLOSED
+    if (ticket.status === "CLOSED") {
+      return throwBadRequest("Cannot reply to a closed ticket");
+    }
+
+    // Authors can only reply to their own tickets
+    if (user.role === "AUTHOR" && ticket.authorId !== user.id) {
+      return throwForbidden("You cannot reply to this ticket");
+    }
+
+    // Only admins can post internal notes
+    const effectiveInternalNote = user.role === "ADMIN" ? Boolean(isInternalNote) : false;
+
+    const newMessage = await prisma.ticketMessage.create({
+      data: {
+        ticketId: id,
+        senderId: user.id,
+        message: message.trim(),
+        isInternalNote: effectiveInternalNote,
+      },
+      include: {
+        sender: {
+          select: { id: true, name: true, email: true, role: true },
+        },
+      },
+    });
+
+    // If an admin posts a public reply to an OPEN ticket, auto-advance status to IN_PROGRESS
+    if (user.role === "ADMIN" && !effectiveInternalNote && ticket.status === "OPEN") {
+      await prisma.ticket.update({
+        where: { id },
+        data: { status: "IN_PROGRESS" },
+      });
+    }
+
+    return res.status(201).json({
+      success: true,
+      message: effectiveInternalNote ? "Internal note added" : "Response sent successfully",
+      data: newMessage,
     });
   } catch (error) {
     next(error);

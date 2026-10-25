@@ -5,6 +5,7 @@ import {
   getTickets,
   getTicketById,
   updateTicket,
+  addMessage,
 } from "../controllers/ticketController.js";
 import { authenticate, requireRole } from "../middleware/auth.js";
 import { validate } from "../middleware/validate.js";
@@ -53,12 +54,22 @@ const updateTicketSchema = z.object({
   }),
 });
 
-// Author & Admin: List tickets & Get single ticket
+const addMessageSchema = z.object({
+  body: z.object({
+    message: z.string().min(1, "Message cannot be empty"),
+    isInternalNote: z.boolean().optional(),
+  }),
+});
+
+// Author & Admin: List tickets & Get single ticket details with thread
 router.get("/", getTickets);
 router.get("/:id", getTicketById);
 
 // Author: Create a support ticket
 router.post("/", validate(createTicketSchema), createTicket);
+
+// Author & Admin: Post a message / public response / internal note
+router.post("/:id/messages", validate(addMessageSchema), addMessage);
 
 // Admin-only: Update status, priority, category, or assignment
 router.patch("/:id", requireRole(["ADMIN"]), validate(updateTicketSchema), updateTicket);
