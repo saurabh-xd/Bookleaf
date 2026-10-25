@@ -4,6 +4,7 @@ import morgan from "morgan";
 import config from "./config/index.js";
 import authRoutes from "./routes/authRoutes.js";
 import bookRoutes from "./routes/bookRoutes.js";
+import ticketRoutes from "./routes/ticketRoutes.js";
 import { errorHandler } from "./middleware/errorHandler.js";
 import { notFoundError } from "./utils/errors.js";
 
@@ -39,6 +40,9 @@ app.use("/api/auth", authRoutes);
 
 // Books & Royalty Routes
 app.use("/api/books", bookRoutes);
+
+// Support Tickets Routes
+app.use("/api/tickets", ticketRoutes);
 
 // Catch 404
 app.use((req, res, next) => {
