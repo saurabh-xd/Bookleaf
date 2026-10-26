@@ -1,7 +1,7 @@
 "use client";
 
 import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
-import type { AuthUser, UserRole } from "../types/index";
+import type { AuthUser } from "../types/index";
 import { api } from "../lib/api";
 
 interface AuthContextType {
@@ -10,30 +10,15 @@ interface AuthContextType {
   isLoading: boolean;
   login: (email: string, password: string) => Promise<void>;
   logout: () => void;
-  switchDemoUser: (role: UserRole) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
-
-export const DEMO_CREDENTIALS = {
-  AUTHOR: {
-    email: "priya.sharma@email.com",
-    password: "Author@123",
-    label: "Priya Sharma (Author)",
-  },
-  ADMIN: {
-    email: "admin@bookleaf.com",
-    password: "Admin@123",
-    label: "Operations Admin",
-  },
-};
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [token, setToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
-  // Authenticate with specific credentials
   const login = useCallback(async (email: string, password: string) => {
     setIsLoading(true);
     try {
@@ -56,15 +41,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setUser(null);
   }, []);
 
-  // Quick switcher for demo review (Author <-> Admin)
-  const switchDemoUser = useCallback(
-    async (role: UserRole) => {
-      const creds = DEMO_CREDENTIALS[role];
-      await login(creds.email, creds.password);
-    },
-    [login]
-  );
-
   // Initial session hydration
   useEffect(() => {
     const initAuth = async () => {
@@ -75,14 +51,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         try {
           setToken(storedToken);
           setUser(JSON.parse(storedUser));
-          // Refresh user profile in background
           const me = await api.auth.getMe();
           if (me.success && me.data) {
             setUser(me.data);
             localStorage.setItem("bookleaf_user", JSON.stringify(me.data));
           }
         } catch {
-          // Token expired or invalid, clear session
           logout();
         }
       }
@@ -90,7 +64,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
 
     initAuth();
-  }, [switchDemoUser]);
+  }, [logout]);
 
   return (
     <AuthContext.Provider
@@ -100,7 +74,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         isLoading,
         login,
         logout,
-        switchDemoUser,
       }}
     >
       {children}

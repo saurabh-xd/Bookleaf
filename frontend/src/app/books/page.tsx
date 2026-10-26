@@ -28,8 +28,12 @@ export default function MyBooksPage() {
   const { isConnected } = useSSE(token);
 
   useEffect(() => {
-    if (!authLoading && !user) {
-      router.replace("/login");
+    if (!authLoading) {
+      if (!user) {
+        router.replace("/login");
+      } else if (user.role === "ADMIN") {
+        router.replace("/");
+      }
     }
   }, [user, authLoading, router]);
 
