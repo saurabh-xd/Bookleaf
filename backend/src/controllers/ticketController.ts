@@ -258,6 +258,43 @@ export const getTicketById = async (req: Request, res: Response, next: NextFunct
       return throwForbidden("You cannot view this ticket");
     }
 
+    // Self-heal: ensure messages signed by Support or matching AI drafts are attributed to Admin
+    const hasMisattributed = ticket.messages.some(
+      (m) =>
+        m.senderId === ticket.authorId &&
+        (m.message.includes("BookLeaf Author Support") ||
+          m.message.includes("BookLeaf Operations") ||
+          m.message.includes("Warmly,") ||
+          (ticket.aiDraftResponse && m.message.trim() === ticket.aiDraftResponse.trim()))
+    );
+
+    if (hasMisattributed) {
+      const admin = await prisma.user.findFirst({ where: { role: "ADMIN" } });
+      if (admin) {
+        for (const m of ticket.messages) {
+          if (
+            m.senderId === ticket.authorId &&
+            (m.message.includes("BookLeaf Author Support") ||
+              m.message.includes("BookLeaf Operations") ||
+              m.message.includes("Warmly,") ||
+              (ticket.aiDraftResponse && m.message.trim() === ticket.aiDraftResponse.trim()))
+          ) {
+            await prisma.ticketMessage.update({
+              where: { id: m.id },
+              data: { senderId: admin.id },
+            });
+            m.senderId = admin.id;
+            m.sender = {
+              id: admin.id,
+              name: admin.name,
+              email: admin.email,
+              role: admin.role,
+            };
+          }
+        }
+      }
+    }
+
     // Filter internal notes if viewer is an author
     const sanitizedMessages = ticket.messages.filter((msg) => {
       if (user.role === "AUTHOR") {

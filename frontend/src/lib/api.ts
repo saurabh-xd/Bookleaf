@@ -17,7 +17,7 @@ const API_BASE_URL = rawUrl.endsWith("/api")
 
 const getAuthToken = (): string | null => {
   if (typeof window === "undefined") return null;
-  return localStorage.getItem("bookleaf_token");
+  return sessionStorage.getItem("bookleaf_token") || localStorage.getItem("bookleaf_token");
 };
 
 export async function apiRequest<T>(

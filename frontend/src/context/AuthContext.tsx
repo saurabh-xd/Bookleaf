@@ -24,6 +24,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       const res = await api.auth.login(email, password);
       if (res.success && res.data) {
+        sessionStorage.setItem("bookleaf_token", res.data.token);
+        sessionStorage.setItem("bookleaf_user", JSON.stringify(res.data.user));
         localStorage.setItem("bookleaf_token", res.data.token);
         localStorage.setItem("bookleaf_user", JSON.stringify(res.data.user));
         setToken(res.data.token);
@@ -35,6 +37,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   const logout = useCallback(() => {
+    sessionStorage.removeItem("bookleaf_token");
+    sessionStorage.removeItem("bookleaf_user");
     localStorage.removeItem("bookleaf_token");
     localStorage.removeItem("bookleaf_user");
     setToken(null);
@@ -44,8 +48,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // Initial session hydration
   useEffect(() => {
     const initAuth = async () => {
-      const storedToken = localStorage.getItem("bookleaf_token");
-      const storedUser = localStorage.getItem("bookleaf_user");
+      const storedToken =
+        sessionStorage.getItem("bookleaf_token") || localStorage.getItem("bookleaf_token");
+      const storedUser =
+        sessionStorage.getItem("bookleaf_user") || localStorage.getItem("bookleaf_user");
 
       if (storedToken && storedUser) {
         try {
@@ -54,6 +60,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           const me = await api.auth.getMe();
           if (me.success && me.data) {
             setUser(me.data);
+            sessionStorage.setItem("bookleaf_user", JSON.stringify(me.data));
             localStorage.setItem("bookleaf_user", JSON.stringify(me.data));
           }
         } catch {

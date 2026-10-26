@@ -11,7 +11,7 @@ import type {
 import { api } from "../../lib/api";
 import { SLAIndicator } from "./SLAIndicator";
 import { useAuth } from "../../context/AuthContext";
-import { ArrowLeft, Send, RefreshCw } from "lucide-react";
+import { ArrowLeft, Send, RefreshCw, Lock, CheckCheck } from "lucide-react";
 
 interface TicketResolutionWorkspaceProps {
   ticket: Ticket;
@@ -343,52 +343,81 @@ export const TicketResolutionWorkspace: React.FC<TicketResolutionWorkspaceProps>
             </div>
           </div>
 
-          {/* Conversation list */}
-          <div className="bg-card border border-border rounded-lg p-4 min-h-[260px] max-h-[460px] overflow-y-auto space-y-3">
+          {/* WhatsApp-Style Chat Surface */}
+          <div className="bg-neutral-100/70 dark:bg-[#0b141a]/80 border border-border rounded-xl p-4 min-h-[340px] max-h-[500px] overflow-y-auto space-y-2.5">
+            <div className="flex justify-center my-1">
+              <span className="text-[10px] font-medium tracking-wide uppercase px-2.5 py-0.5 rounded-full bg-card shadow-xs text-muted-foreground border border-border/40 select-none">
+                Conversation Thread
+              </span>
+            </div>
+
             {messages.length === 0 ? (
-              <div className="text-center py-10 text-xs text-muted-foreground">
+              <div className="text-center py-12 text-xs text-muted-foreground">
                 No replies yet.
               </div>
             ) : (
               messages.map((msg) => {
                 const isInternal = msg.isInternalNote;
-                const isAuthor = msg.sender?.role === "AUTHOR";
+                const timeStr = new Date(msg.createdAt).toLocaleTimeString([], {
+                  hour: "2-digit",
+                  minute: "2-digit",
+                });
 
                 if (isInternal) {
                   return (
                     <div
                       key={msg.id}
-                      className="rounded-md p-3 bg-amber-500/10 border border-amber-500/20 text-xs text-amber-900 dark:text-amber-200 space-y-1"
+                      className="max-w-[90%] mx-auto my-1.5 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-300 dark:border-amber-700/60 p-3 text-xs text-amber-900 dark:text-amber-200 shadow-2xs space-y-1"
                     >
-                      <div className="flex items-center justify-between text-[10px] text-amber-700 dark:text-amber-400">
-                        <span>Internal Note ({msg.sender?.name})</span>
-                        <span>{new Date(msg.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</span>
+                      <div className="flex items-center justify-between text-[10px] text-amber-700 dark:text-amber-400 font-semibold border-b border-amber-200 dark:border-amber-800/50 pb-1">
+                        <span className="flex items-center gap-1">
+                          <Lock className="h-3 w-3" />
+                          <span>Internal Note &bull; {msg.sender?.name || "Staff"}</span>
+                        </span>
+                        <span>{timeStr}</span>
                       </div>
-                      <p className="whitespace-pre-wrap">{msg.message}</p>
+                      <p className="whitespace-pre-wrap break-words">{msg.message}</p>
                     </div>
                   );
                 }
 
+                // In Admin view: Support/Admin messages are "Me" (Right side, green), Author is "Other" (Left side, white/card)
+                const isSupport =
+                  msg.sender?.role === "ADMIN" ||
+                  msg.senderId === user?.id ||
+                  msg.sender?.id === user?.id ||
+                  msg.message.includes("BookLeaf Author Support") ||
+                  msg.message.includes("Warmly,") ||
+                  (ticket.aiDraftResponse && msg.message.trim() === ticket.aiDraftResponse.trim());
+
+                const isMe = isSupport;
+
                 return (
                   <div
                     key={msg.id}
-                    className={`flex flex-col ${isAuthor ? "items-start" : "items-end"}`}
+                    className={`w-full flex ${isMe ? "justify-end" : "justify-start"}`}
                   >
-                    <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground mb-1 px-1">
-                      <span>{isAuthor ? msg.sender?.name || "Author" : "Support"}</span>
-                      <span>&bull;</span>
-                      <span>{new Date(msg.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</span>
-                    </div>
-
-                    <div
-                      className={`max-w-[80%] rounded-lg p-3 text-xs leading-relaxed ${
-                        isAuthor
-                          ? "bg-muted text-foreground border border-border"
-                          : "bg-primary text-primary-foreground"
-                      }`}
-                    >
-                      <p className="whitespace-pre-wrap">{msg.message}</p>
-                    </div>
+                    {isMe ? (
+                      /* WhatsApp Outgoing Bubble (Right side, soft green) */
+                      <div className="max-w-[82%] sm:max-w-[70%] rounded-2xl rounded-tr-xs bg-[#d9fdd3] dark:bg-[#005c4b] text-[#111b21] dark:text-[#e9edef] px-3.5 py-2 shadow-xs text-xs sm:text-[13px] leading-relaxed relative">
+                        <p className="whitespace-pre-wrap break-words">{msg.message}</p>
+                        <div className="flex items-center justify-end gap-1 mt-1 text-[10px] text-neutral-500 dark:text-neutral-300 select-none">
+                          <span>{timeStr}</span>
+                          <CheckCheck className="h-3 w-3 text-emerald-600 dark:text-emerald-300" />
+                        </div>
+                      </div>
+                    ) : (
+                      /* WhatsApp Incoming Bubble (Left side, white/card) */
+                      <div className="max-w-[82%] sm:max-w-[70%] rounded-2xl rounded-tl-xs bg-card dark:bg-[#202c33] text-foreground dark:text-[#e9edef] border border-border/70 dark:border-neutral-700/60 px-3.5 py-2 shadow-xs text-xs sm:text-[13px] leading-relaxed relative">
+                        <span className="block text-[11px] font-bold text-teal-700 dark:text-teal-400 mb-0.5">
+                          {msg.sender?.name || ticket.author.name} (Author)
+                        </span>
+                        <p className="whitespace-pre-wrap break-words">{msg.message}</p>
+                        <div className="flex items-center justify-end mt-1 text-[10px] text-muted-foreground select-none">
+                          <span>{timeStr}</span>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 );
               })
@@ -396,14 +425,14 @@ export const TicketResolutionWorkspace: React.FC<TicketResolutionWorkspaceProps>
             <div ref={messagesEndRef} />
           </div>
 
-          {/* Composer */}
-          <form onSubmit={handleSubmitMessage} className="bg-card border border-border rounded-lg p-3.5 space-y-3">
+          {/* WhatsApp-Style Composer */}
+          <form onSubmit={handleSubmitMessage} className="bg-card border border-border rounded-xl p-3 space-y-2.5 shadow-xs">
             <div className="flex items-center justify-between text-xs border-b border-border pb-2">
-              <div className="flex items-center gap-1">
+              <div className="flex items-center gap-1.5">
                 <button
                   type="button"
                   onClick={() => setComposerMode("PUBLIC")}
-                  className={`px-2.5 py-1 rounded text-xs font-medium transition-colors ${
+                  className={`px-2.5 py-1 rounded-md text-xs font-medium transition-colors ${
                     composerMode === "PUBLIC"
                       ? "bg-muted text-foreground"
                       : "text-muted-foreground hover:text-foreground"
@@ -414,17 +443,18 @@ export const TicketResolutionWorkspace: React.FC<TicketResolutionWorkspaceProps>
                 <button
                   type="button"
                   onClick={() => setComposerMode("INTERNAL")}
-                  className={`px-2.5 py-1 rounded text-xs font-medium transition-colors ${
+                  className={`px-2.5 py-1 rounded-md text-xs font-medium transition-colors flex items-center gap-1 ${
                     composerMode === "INTERNAL"
-                      ? "bg-muted text-foreground"
+                      ? "bg-amber-100 text-amber-900 dark:bg-amber-950 dark:text-amber-200"
                       : "text-muted-foreground hover:text-foreground"
                   }`}
                 >
-                  Internal Note
+                  <Lock className="h-3 w-3" />
+                  <span>Internal Note</span>
                 </button>
               </div>
 
-              <label className="flex items-center gap-1.5 text-xs text-muted-foreground cursor-pointer">
+              <label className="flex items-center gap-1.5 text-xs text-muted-foreground cursor-pointer select-none">
                 <input
                   type="checkbox"
                   checked={resolveOnSend}
@@ -435,35 +465,42 @@ export const TicketResolutionWorkspace: React.FC<TicketResolutionWorkspaceProps>
               </label>
             </div>
 
-            <textarea
-              rows={3}
-              required
-              value={composerText}
-              onChange={(e) => setComposerText(e.target.value)}
-              placeholder={
-                composerMode === "PUBLIC"
-                  ? "Type reply to author..."
-                  : "Type internal note..."
-              }
-              disabled={isSending}
-              className="w-full text-xs rounded-md bg-card border border-border p-2.5 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring resize-none"
-            />
+            <div className="flex items-end gap-2">
+              <textarea
+                rows={2}
+                required
+                value={composerText}
+                onChange={(e) => setComposerText(e.target.value)}
+                placeholder={
+                  composerMode === "PUBLIC"
+                    ? "Type reply to author (or click Insert into Composer from AI draft)..."
+                    : "Type private internal note (never shown to author)..."
+                }
+                disabled={isSending}
+                className="flex-1 text-xs sm:text-sm rounded-lg bg-card border border-border p-2.5 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring resize-none max-h-36"
+              />
 
-            <div className="flex items-center justify-end">
               <button
                 type="submit"
                 disabled={isSending || !composerText.trim()}
-                className="px-3.5 py-1.5 rounded-md text-xs font-medium bg-primary text-primary-foreground hover:opacity-90 disabled:opacity-40 flex items-center gap-1.5"
+                className={`h-9 px-3.5 rounded-lg text-xs font-medium text-white flex items-center gap-1.5 transition-all flex-shrink-0 disabled:opacity-40 shadow-xs ${
+                  composerMode === "PUBLIC"
+                    ? "bg-emerald-600 hover:bg-emerald-500"
+                    : "bg-amber-600 hover:bg-amber-500"
+                }`}
               >
                 {isSending ? (
                   <span>Sending...</span>
                 ) : composerMode === "PUBLIC" ? (
                   <>
-                    <span>Send Reply</span>
+                    <span>Send</span>
                     <Send className="h-3 w-3" />
                   </>
                 ) : (
-                  <span>Save Note</span>
+                  <>
+                    <span>Save</span>
+                    <Lock className="h-3 w-3" />
+                  </>
                 )}
               </button>
             </div>

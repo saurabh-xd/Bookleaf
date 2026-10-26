@@ -3,7 +3,8 @@
 import React, { useState, useEffect, useRef } from "react";
 import type { Ticket, TicketMessage } from "../../types/index";
 import { api } from "../../lib/api";
-import { ArrowLeft, Send } from "lucide-react";
+import { useAuth } from "../../context/AuthContext";
+import { ArrowLeft, Send, CheckCheck } from "lucide-react";
 
 interface AuthorTicketDetailProps {
   ticket: Ticket;
@@ -18,6 +19,7 @@ export const AuthorTicketDetail: React.FC<AuthorTicketDetailProps> = ({
   onTicketUpdated,
   lastSSEEvent,
 }) => {
+  const { user } = useAuth();
   const [ticket, setTicket] = useState<Ticket>(initialTicket);
   const [messages, setMessages] = useState<TicketMessage[]>(initialTicket.messages || []);
   const [newMessage, setNewMessage] = useState<string>("");
@@ -84,16 +86,16 @@ export const AuthorTicketDetail: React.FC<AuthorTicketDetailProps> = ({
   };
 
   return (
-    <div className="space-y-4">
-      {/* Top Bar */}
+    <div className="space-y-4 max-w-4xl mx-auto">
+      {/* Top Header */}
       <div className="flex items-center justify-between gap-3 pb-3 border-b border-border">
         <button
           type="button"
           onClick={onBack}
-          className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground"
+          className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground font-medium"
         >
           <ArrowLeft className="h-3.5 w-3.5" />
-          <span>Back</span>
+          <span>Back to Tickets</span>
         </button>
 
         <div className="flex items-center gap-2">
@@ -109,8 +111,8 @@ export const AuthorTicketDetail: React.FC<AuthorTicketDetailProps> = ({
         </div>
       </div>
 
-      {/* Ticket Details */}
-      <div className="bg-card border border-border rounded-lg p-4 space-y-2">
+      {/* Ticket Context Header */}
+      <div className="bg-card border border-border rounded-lg p-4 space-y-1.5">
         <div className="flex items-start justify-between gap-2">
           <h2 className="text-sm font-semibold text-foreground">
             {ticket.subject}
@@ -122,7 +124,7 @@ export const AuthorTicketDetail: React.FC<AuthorTicketDetailProps> = ({
           )}
         </div>
 
-        <p className="text-xs text-muted-foreground leading-relaxed pt-1">
+        <p className="text-xs text-muted-foreground leading-relaxed">
           {ticket.description}
         </p>
 
@@ -133,38 +135,60 @@ export const AuthorTicketDetail: React.FC<AuthorTicketDetailProps> = ({
         )}
       </div>
 
-      {/* Messages */}
-      <div className="bg-card border border-border rounded-lg p-4 min-h-[260px] max-h-[460px] overflow-y-auto space-y-3">
+      {/* WhatsApp-Style Chat Wallpaper Surface */}
+      <div className="bg-neutral-100/70 dark:bg-[#0b141a]/80 border border-border rounded-xl p-4 min-h-[340px] max-h-[520px] overflow-y-auto space-y-2.5">
+        <div className="flex justify-center my-1">
+          <span className="text-[10px] font-medium tracking-wide uppercase px-2.5 py-0.5 rounded-full bg-card shadow-xs text-muted-foreground border border-border/40 select-none">
+            Support Conversation
+          </span>
+        </div>
+
         {messages.length === 0 ? (
-          <div className="text-center py-10 text-xs text-muted-foreground">
+          <div className="text-center py-12 text-xs text-muted-foreground">
             No messages yet.
           </div>
         ) : (
           messages.map((msg) => {
-            const isAdmin = msg.sender?.role === "ADMIN";
+            // In Author view: Author messages are "Me" (Right side, green), Support is "Other" (Left side, white/card)
+            const isSupport =
+              msg.sender?.role === "ADMIN" ||
+              msg.message.includes("BookLeaf Author Support") ||
+              msg.message.includes("Warmly,") ||
+              (ticket.aiDraftResponse && msg.message.trim() === ticket.aiDraftResponse.trim());
+
+            const isMe = !isSupport;
+
+            const timeStr = new Date(msg.createdAt).toLocaleTimeString([], {
+              hour: "2-digit",
+              minute: "2-digit",
+            });
 
             return (
               <div
                 key={msg.id}
-                className={`flex flex-col ${isAdmin ? "items-start" : "items-end"}`}
+                className={`w-full flex ${isMe ? "justify-end" : "justify-start"}`}
               >
-                <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground mb-1 px-1">
-                  <span>{isAdmin ? "Support" : "You"}</span>
-                  <span>&bull;</span>
-                  <span>
-                    {new Date(msg.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
-                  </span>
-                </div>
-
-                <div
-                  className={`max-w-[80%] rounded-lg p-3 text-xs leading-relaxed ${
-                    isAdmin
-                      ? "bg-muted text-foreground border border-border"
-                      : "bg-primary text-primary-foreground"
-                  }`}
-                >
-                  <p className="whitespace-pre-wrap">{msg.message}</p>
-                </div>
+                {isMe ? (
+                  /* WhatsApp Outgoing Bubble (Right side, soft green, tail top-right) */
+                  <div className="max-w-[82%] sm:max-w-[70%] rounded-2xl rounded-tr-xs bg-[#d9fdd3] dark:bg-[#005c4b] text-[#111b21] dark:text-[#e9edef] px-3.5 py-2 shadow-xs text-xs sm:text-[13px] leading-relaxed relative">
+                    <p className="whitespace-pre-wrap break-words">{msg.message}</p>
+                    <div className="flex items-center justify-end gap-1 mt-1 text-[10px] text-neutral-500 dark:text-neutral-300 select-none">
+                      <span>{timeStr}</span>
+                      <CheckCheck className="h-3 w-3 text-emerald-600 dark:text-emerald-300" />
+                    </div>
+                  </div>
+                ) : (
+                  /* WhatsApp Incoming Bubble (Left side, white/card, tail top-left) */
+                  <div className="max-w-[82%] sm:max-w-[70%] rounded-2xl rounded-tl-xs bg-card dark:bg-[#202c33] text-foreground dark:text-[#e9edef] border border-border/70 dark:border-neutral-700/60 px-3.5 py-2 shadow-xs text-xs sm:text-[13px] leading-relaxed relative">
+                    <span className="block text-[11px] font-bold text-teal-700 dark:text-teal-400 mb-0.5">
+                      {msg.sender?.name || "BookLeaf Operations Support"}
+                    </span>
+                    <p className="whitespace-pre-wrap break-words">{msg.message}</p>
+                    <div className="flex items-center justify-end mt-1 text-[10px] text-muted-foreground select-none">
+                      <span>{timeStr}</span>
+                    </div>
+                  </div>
+                )}
               </div>
             );
           })
@@ -172,10 +196,10 @@ export const AuthorTicketDetail: React.FC<AuthorTicketDetailProps> = ({
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Reply input */}
+      {/* WhatsApp-Style Bottom Composer */}
       {ticket.status === "CLOSED" ? (
         <div className="p-3 rounded-md bg-muted text-center text-xs text-muted-foreground border border-border">
-          This ticket is closed.
+          This ticket has been closed. Please create a new ticket if you need further help.
         </div>
       ) : (
         <form onSubmit={handleSendMessage} className="space-y-2">
@@ -183,22 +207,28 @@ export const AuthorTicketDetail: React.FC<AuthorTicketDetailProps> = ({
             <p className="text-xs text-destructive">{sendError}</p>
           )}
 
-          <div className="flex gap-2">
+          <div className="flex items-center gap-2 bg-card border border-border rounded-xl p-1.5 shadow-xs focus-within:ring-1 focus-within:ring-ring">
             <textarea
-              rows={2}
+              rows={1}
               value={newMessage}
               onChange={(e) => setNewMessage(e.target.value)}
-              placeholder="Type your response..."
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && !e.shiftKey) {
+                  e.preventDefault();
+                  handleSendMessage(e);
+                }
+              }}
+              placeholder="Type a message (Press Enter to send)..."
               disabled={isSending}
-              className="flex-1 text-xs rounded-md bg-card border border-border p-2.5 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring resize-none"
+              className="flex-1 text-xs sm:text-sm px-3 py-1.5 bg-transparent border-0 text-foreground placeholder:text-muted-foreground focus:outline-none resize-none max-h-32"
             />
             <button
               type="submit"
               disabled={isSending || !newMessage.trim()}
-              className="px-4 rounded-md text-xs font-medium bg-primary text-primary-foreground hover:opacity-90 disabled:opacity-40 self-end py-2 flex items-center gap-1"
+              className="h-8 w-8 rounded-full bg-emerald-600 hover:bg-emerald-500 disabled:opacity-40 text-white flex items-center justify-center transition-all flex-shrink-0 shadow-xs"
+              title="Send Message"
             >
-              <span>Send</span>
-              <Send className="h-3 w-3" />
+              <Send className="h-3.5 w-3.5" />
             </button>
           </div>
         </form>
