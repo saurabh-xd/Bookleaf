@@ -10,6 +10,7 @@ import type {
 } from "../../types/index";
 import { api } from "../../lib/api";
 import { SLAIndicator } from "./SLAIndicator";
+import { useAuth } from "../../context/AuthContext";
 import { ArrowLeft, Send, RefreshCw } from "lucide-react";
 
 interface TicketResolutionWorkspaceProps {
@@ -37,6 +38,7 @@ export const TicketResolutionWorkspace: React.FC<TicketResolutionWorkspaceProps>
   onTicketUpdated,
   lastSSEEvent,
 }) => {
+  const { user } = useAuth();
   const [ticket, setTicket] = useState<Ticket>(initialTicket);
   const [messages, setMessages] = useState<TicketMessage[]>(initialTicket.messages || []);
   const [composerMode, setComposerMode] = useState<"PUBLIC" | "INTERNAL">("PUBLIC");
@@ -151,6 +153,24 @@ export const TicketResolutionWorkspace: React.FC<TicketResolutionWorkspaceProps>
       setError(err?.message || "Failed to regenerate draft");
     } finally {
       setIsRegeneratingDraft(false);
+    }
+  };
+
+  const handleAssignToMe = async () => {
+    if (!user) return;
+    setIsUpdatingStatus(true);
+    setError(null);
+    try {
+      const newAdminId = ticket.assignedAdminId === user.id ? null : user.id;
+      const res = await api.tickets.update(ticket.id, { assignedAdminId: newAdminId });
+      if (res.success && res.data) {
+        setTicket(res.data);
+        onTicketUpdated(res.data);
+      }
+    } catch (err: any) {
+      setError(err?.message || "Failed to update assignment");
+    } finally {
+      setIsUpdatingStatus(false);
     }
   };
 
@@ -272,6 +292,25 @@ export const TicketResolutionWorkspace: React.FC<TicketResolutionWorkspaceProps>
               </option>
             ))}
           </select>
+        </div>
+
+        <div className="flex items-center gap-1.5 ml-auto">
+          <button
+            type="button"
+            onClick={handleAssignToMe}
+            disabled={isUpdatingStatus}
+            className={`px-2.5 py-1 rounded text-xs font-medium border transition-colors ${
+              ticket.assignedAdminId === user?.id
+                ? "bg-primary text-primary-foreground border-primary"
+                : "bg-card text-foreground border-border hover:bg-muted"
+            }`}
+          >
+            {ticket.assignedAdminId === user?.id
+              ? "Assigned to You (Unassign)"
+              : ticket.assignedAdmin
+              ? `Assigned: ${ticket.assignedAdmin.name}`
+              : "Assign to Me"}
+          </button>
         </div>
       </div>
 

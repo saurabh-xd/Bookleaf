@@ -89,6 +89,9 @@ export const AdminQueue: React.FC<AdminQueueProps> = ({
                   {ticket.book && (
                     <span>Book: {ticket.book.title}</span>
                   )}
+                  {ticket.assignedAdmin && (
+                    <span>Assigned: {ticket.assignedAdmin.name}</span>
+                  )}
                   <span>{messageCount} {messageCount === 1 ? "msg" : "msgs"}</span>
                 </div>
               </div>
