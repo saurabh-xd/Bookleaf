@@ -3,21 +3,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import type { Ticket, TicketMessage } from "../../types/index";
 import { api } from "../../lib/api";
-import {
-  ArrowLeft,
-  LifeBuoy,
-  Send,
-  BookOpen,
-  Clock,
-  ShieldCheck,
-  CheckCircle2,
-  Paperclip,
-  User,
-  Sparkles,
-  Flame,
-  AlertTriangle,
-  Lock,
-} from "lucide-react";
+import { ArrowLeft, Send } from "lucide-react";
 
 interface AuthorTicketDetailProps {
   ticket: Ticket;
@@ -47,14 +33,12 @@ export const AuthorTicketDetail: React.FC<AuthorTicketDetailProps> = ({
     scrollToBottom();
   }, [messages]);
 
-  // Sync latest ticket details from API
   const refreshTicket = async () => {
     try {
       const res = await api.tickets.getById(ticket.id);
       if (res.success && res.data) {
         setTicket(res.data);
         if (res.data.messages) {
-          // Authors only see public messages (backend already excludes internal notes)
           setMessages(res.data.messages);
         }
         onTicketUpdated(res.data);
@@ -64,14 +48,12 @@ export const AuthorTicketDetail: React.FC<AuthorTicketDetailProps> = ({
     }
   };
 
-  // SSE Reactive Listener: If a new message or update arrived for this ticket
   useEffect(() => {
     if (!lastSSEEvent) return;
-
-    const { type, data } = lastSSEEvent;
+    const { event, data } = lastSSEEvent;
     if (
-      (type === "NEW_MESSAGE" && data?.ticketId === ticket.id) ||
-      (type === "TICKET_UPDATED" && data?.ticket?.id === ticket.id)
+      (event === "NEW_MESSAGE" && data?.ticketId === ticket.id) ||
+      (event === "TICKET_UPDATED" && data?.ticket?.id === ticket.id)
     ) {
       refreshTicket();
     }
@@ -95,197 +77,130 @@ export const AuthorTicketDetail: React.FC<AuthorTicketDetailProps> = ({
         scrollToBottom();
       }
     } catch (err: any) {
-      console.error("Failed to post message:", err);
-      setSendError(err?.message || "Failed to send message. Please try again.");
+      setSendError(err?.message || "Failed to send message.");
     } finally {
       setIsSending(false);
     }
   };
 
-  const getPriorityLabel = () => {
-    switch (ticket.priority) {
-      case "CRITICAL":
-        return { label: "Critical Priority (<4h SLA)", color: "text-rose-400 bg-rose-950/40 border-rose-800/60" };
-      case "HIGH":
-        return { label: "High Priority (<12h SLA)", color: "text-amber-400 bg-amber-950/40 border-amber-800/60" };
-      case "MEDIUM":
-        return { label: "Medium Priority (<24h SLA)", color: "text-teal-400 bg-teal-950/40 border-teal-800/60" };
-      case "LOW":
-      default:
-        return { label: "Standard Priority (<48h SLA)", color: "text-slate-300 bg-slate-800/60 border-slate-700" };
-    }
-  };
-
-  const priorityStyle = getPriorityLabel();
-
   return (
-    <div className="space-y-6">
-      {/* Top Navigation & Status Bar */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-800">
+    <div className="space-y-4">
+      {/* Top Bar */}
+      <div className="flex items-center justify-between gap-3 pb-3 border-b border-border">
         <button
           type="button"
           onClick={onBack}
-          className="inline-flex items-center gap-2 text-xs font-semibold text-slate-400 hover:text-white transition-colors self-start"
+          className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground"
         >
-          <ArrowLeft className="h-4 w-4" />
-          <span>Back to Ticket Queue</span>
+          <ArrowLeft className="h-3.5 w-3.5" />
+          <span>Back</span>
         </button>
 
-        <div className="flex flex-wrap items-center gap-2">
-          <span className="font-mono text-xs font-bold text-teal-400 px-2.5 py-1 rounded-lg bg-teal-950/50 border border-teal-800/40">
+        <div className="flex items-center gap-2">
+          <span className="font-mono text-xs font-semibold text-foreground">
             {ticket.ticketNumber}
           </span>
-          <span className={`text-xs px-2.5 py-1 rounded-lg border font-semibold ${priorityStyle.color}`}>
-            {priorityStyle.label}
+          <span className="text-[11px] px-2 py-0.5 rounded bg-muted text-muted-foreground border border-border">
+            {ticket.priority}
           </span>
-          <span className="text-xs px-2.5 py-1 rounded-lg bg-slate-800 text-slate-300 border border-slate-700 font-semibold">
-            Status: {ticket.status}
+          <span className="text-[11px] px-2 py-0.5 rounded bg-muted text-foreground border border-border">
+            {ticket.status}
           </span>
         </div>
       </div>
 
-      {/* Ticket Header & Context Card */}
-      <div className="glass-card rounded-2xl p-5 border border-slate-800/80 space-y-3">
-        <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
-          <div>
-            <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
-              {ticket.category.replace(/_/g, " ")}
-            </span>
-            <h2 className="font-heading text-lg sm:text-xl font-bold text-white mt-0.5">
-              {ticket.subject}
-            </h2>
-          </div>
-
+      {/* Ticket Details */}
+      <div className="bg-card border border-border rounded-lg p-4 space-y-2">
+        <div className="flex items-start justify-between gap-2">
+          <h2 className="text-sm font-semibold text-foreground">
+            {ticket.subject}
+          </h2>
           {ticket.book && (
-            <div className="flex items-center gap-2 bg-slate-900/80 px-3 py-1.5 rounded-xl border border-slate-800 text-xs text-slate-300 self-start">
-              <BookOpen className="h-3.5 w-3.5 text-teal-400" />
-              <span className="font-medium">{ticket.book.title}</span>
-              <span className="text-[10px] text-slate-500 font-mono">({ticket.book.isbn})</span>
-            </div>
+            <span className="text-xs text-muted-foreground font-medium">
+              {ticket.book.title}
+            </span>
           )}
         </div>
 
-        <p className="text-xs sm:text-sm text-slate-300 leading-relaxed bg-slate-950/40 p-4 rounded-xl border border-slate-900">
+        <p className="text-xs text-muted-foreground leading-relaxed pt-1">
           {ticket.description}
         </p>
 
         {ticket.fileAttachmentName && (
-          <div className="flex items-center gap-2 text-xs text-teal-300 bg-teal-950/30 px-3 py-2 rounded-xl border border-teal-800/40 w-fit">
-            <Paperclip className="h-3.5 w-3.5 text-teal-400" />
-            <span className="font-mono text-[11px]">{ticket.fileAttachmentName}</span>
+          <div className="text-[11px] font-mono text-muted-foreground pt-1">
+            Attachment: {ticket.fileAttachmentName}
           </div>
         )}
       </div>
 
-      {/* Conversation Thread */}
-      <div className="space-y-4">
-        <h3 className="font-heading text-sm font-bold text-slate-300 flex items-center gap-2">
-          <span>Conversation History</span>
-          <span className="text-xs px-2 py-0.5 rounded-full bg-slate-800 text-slate-400">
-            {messages.length}
-          </span>
-        </h3>
+      {/* Messages */}
+      <div className="bg-card border border-border rounded-lg p-4 min-h-[260px] max-h-[460px] overflow-y-auto space-y-3">
+        {messages.length === 0 ? (
+          <div className="text-center py-10 text-xs text-muted-foreground">
+            No messages yet.
+          </div>
+        ) : (
+          messages.map((msg) => {
+            const isAdmin = msg.sender?.role === "ADMIN";
 
-        <div className="glass-panel rounded-2xl p-4 sm:p-6 border border-slate-800 min-h-[300px] max-h-[500px] overflow-y-auto space-y-4">
-          {messages.length === 0 ? (
-            <div className="text-center py-12 text-slate-500 text-xs">
-              <LifeBuoy className="h-8 w-8 mx-auto text-slate-600 mb-2" />
-              <p className="font-semibold text-slate-400">Ticket submitted</p>
-              <p className="mt-1">
-                Our support team is reviewing your inquiry. Responses will appear here in real-time.
-              </p>
-            </div>
-          ) : (
-            messages.map((msg) => {
-              const isAdmin = msg.sender?.role === "ADMIN";
-
-              return (
-                <div
-                  key={msg.id}
-                  className={`flex flex-col ${isAdmin ? "items-start" : "items-end"}`}
-                >
-                  <div className="flex items-center gap-2 mb-1 text-[11px] text-slate-400 px-1">
-                    {isAdmin ? (
-                      <>
-                        <span className="font-semibold text-emerald-400 flex items-center gap-1">
-                          <ShieldCheck className="h-3 w-3" />
-                          BookLeaf Operations Support
-                        </span>
-                        <span>•</span>
-                        <span>
-                          {new Date(msg.createdAt).toLocaleTimeString("en-IN", {
-                            hour: "2-digit",
-                            minute: "2-digit",
-                          })}
-                        </span>
-                      </>
-                    ) : (
-                      <>
-                        <span>
-                          {new Date(msg.createdAt).toLocaleTimeString("en-IN", {
-                            hour: "2-digit",
-                            minute: "2-digit",
-                          })}
-                        </span>
-                        <span>•</span>
-                        <span className="font-semibold text-slate-300">You (Author)</span>
-                      </>
-                    )}
-                  </div>
-
-                  <div
-                    className={`max-w-[85%] sm:max-w-[75%] rounded-2xl p-3.5 sm:p-4 text-xs sm:text-sm leading-relaxed shadow-md ${
-                      isAdmin
-                        ? "bg-slate-900 border border-slate-700 text-slate-200 rounded-tl-sm"
-                        : "bg-teal-600 text-white rounded-tr-sm"
-                    }`}
-                  >
-                    <p className="whitespace-pre-wrap">{msg.message}</p>
-                  </div>
+            return (
+              <div
+                key={msg.id}
+                className={`flex flex-col ${isAdmin ? "items-start" : "items-end"}`}
+              >
+                <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground mb-1 px-1">
+                  <span>{isAdmin ? "Support" : "You"}</span>
+                  <span>&bull;</span>
+                  <span>
+                    {new Date(msg.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                  </span>
                 </div>
-              );
-            })
-          )}
-          <div ref={messagesEndRef} />
-        </div>
+
+                <div
+                  className={`max-w-[80%] rounded-lg p-3 text-xs leading-relaxed ${
+                    isAdmin
+                      ? "bg-muted text-foreground border border-border"
+                      : "bg-primary text-primary-foreground"
+                  }`}
+                >
+                  <p className="whitespace-pre-wrap">{msg.message}</p>
+                </div>
+              </div>
+            );
+          })
+        )}
+        <div ref={messagesEndRef} />
       </div>
 
-      {/* Reply Composer */}
+      {/* Reply input */}
       {ticket.status === "CLOSED" ? (
-        <div className="p-4 rounded-2xl bg-slate-900/60 border border-slate-800 text-center text-xs text-slate-400 flex items-center justify-center gap-2">
-          <Lock className="h-4 w-4 text-slate-500" />
-          <span>This ticket has been closed. Please create a new support ticket if you require further assistance.</span>
+        <div className="p-3 rounded-md bg-muted text-center text-xs text-muted-foreground border border-border">
+          This ticket is closed.
         </div>
       ) : (
-        <form onSubmit={handleSendMessage} className="space-y-3">
+        <form onSubmit={handleSendMessage} className="space-y-2">
           {sendError && (
-            <p className="text-xs text-rose-400 bg-rose-950/40 p-2.5 rounded-xl border border-rose-800/60">
-              {sendError}
-            </p>
+            <p className="text-xs text-destructive">{sendError}</p>
           )}
 
-          <div className="relative">
+          <div className="flex gap-2">
             <textarea
-              rows={3}
+              rows={2}
               value={newMessage}
               onChange={(e) => setNewMessage(e.target.value)}
-              placeholder="Type your response to support..."
+              placeholder="Type your response..."
               disabled={isSending}
-              className="w-full text-xs sm:text-sm rounded-2xl bg-slate-900 border border-slate-700 p-4 pr-24 text-slate-200 placeholder-slate-500 focus:outline-none focus:border-teal-500 resize-none"
+              className="flex-1 text-xs rounded-md bg-card border border-border p-2.5 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring resize-none"
             />
-
             <button
               type="submit"
               disabled={isSending || !newMessage.trim()}
-              className="absolute right-3 bottom-4 inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold text-white bg-teal-500 hover:bg-teal-400 disabled:opacity-40 transition-all shadow-md shadow-teal-900/40"
+              className="px-4 rounded-md text-xs font-medium bg-primary text-primary-foreground hover:opacity-90 disabled:opacity-40 self-end py-2 flex items-center gap-1"
             >
               <span>Send</span>
-              <Send className="h-3.5 w-3.5" />
+              <Send className="h-3 w-3" />
             </button>
           </div>
-          <p className="text-[11px] text-slate-500">
-            Real-time delivery: The operations desk receives your message immediately over the event channel.
-          </p>
         </form>
       )}
     </div>

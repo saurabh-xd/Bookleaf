@@ -10,7 +10,6 @@ export default function LoginPage() {
   const { user, isLoading } = useAuth();
   const router = useRouter();
 
-  // If already authenticated, redirect to portal dashboard
   useEffect(() => {
     if (!isLoading && user) {
       router.replace("/");
@@ -19,14 +18,14 @@ export default function LoginPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#0b0f19]">
-        <div className="w-8 h-8 border-2 border-teal-500 border-t-transparent rounded-full animate-spin" />
+      <div className="min-h-screen flex items-center justify-center bg-background text-foreground">
+        <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#0b0f19]">
+    <div className="min-h-screen flex flex-col bg-background text-foreground">
       <Navbar />
       <main className="flex-1 flex items-center justify-center">
         <LoginForm />

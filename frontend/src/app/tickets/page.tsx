@@ -9,13 +9,7 @@ import type { Book, Ticket } from "../../types/index";
 import { Navbar } from "../../components/common/Navbar";
 import { AuthorTicketList } from "../../components/author/AuthorTicketList";
 import { RaiseTicketModal } from "../../components/author/RaiseTicketModal";
-import {
-  LifeBuoy,
-  RefreshCw,
-  AlertCircle,
-  MessageSquare,
-  Sparkles,
-} from "lucide-react";
+import { RefreshCw } from "lucide-react";
 
 export default function MyTicketsPage() {
   const { user, token, isLoading: authLoading } = useAuth();
@@ -27,13 +21,10 @@ export default function MyTicketsPage() {
   const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Ticket Modal state
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
 
-  // Connect to SSE stream
   const { isConnected, lastEvent } = useSSE(token);
 
-  // Redirect unauthenticated users to /login
   useEffect(() => {
     if (!authLoading && !user) {
       router.replace("/login");
@@ -61,8 +52,7 @@ export default function MyTicketsPage() {
         setBooks(booksRes.data);
       }
     } catch (err: any) {
-      console.error("Failed to load tickets:", err);
-      setError(err?.message || "Failed to load support queries.");
+      setError(err?.message || "Failed to load tickets.");
     } finally {
       setIsLoading(false);
       setIsRefreshing(false);
@@ -75,7 +65,6 @@ export default function MyTicketsPage() {
     }
   }, [user, loadData]);
 
-  // Reactive SSE listener: Refresh tickets on updates
   useEffect(() => {
     if (!lastEvent) return;
     const { event } = lastEvent;
@@ -95,13 +84,13 @@ export default function MyTicketsPage() {
 
   if (authLoading || !user) {
     return (
-      <div className="min-h-screen flex flex-col bg-[#0b0f19]">
+      <div className="min-h-screen flex flex-col bg-background text-foreground">
         <Navbar />
-        <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-10 animate-pulse">
-          <div className="h-36 rounded-3xl bg-slate-900/60 border border-slate-800/60 mb-6" />
-          <div className="space-y-4">
+        <main className="flex-1 max-w-6xl w-full mx-auto px-4 sm:px-6 py-6 animate-pulse">
+          <div className="h-20 rounded-lg bg-muted border border-border mb-4" />
+          <div className="space-y-3">
             {[1, 2, 3].map((i) => (
-              <div key={i} className="h-28 rounded-2xl bg-slate-900/60 border border-slate-800/60" />
+              <div key={i} className="h-20 rounded-lg bg-muted border border-border" />
             ))}
           </div>
         </main>
@@ -109,81 +98,58 @@ export default function MyTicketsPage() {
     );
   }
 
-  const activeTicketCount = tickets.filter(
-    (t) => t.status === "OPEN" || t.status === "IN_PROGRESS"
-  ).length;
-
   return (
-    <div className="min-h-screen flex flex-col bg-[#0b0f19]">
+    <div className="min-h-screen flex flex-col bg-background text-foreground">
       <Navbar sseConnected={isConnected} />
 
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10 space-y-8">
-        {/* Page Header */}
-        <div className="relative overflow-hidden rounded-3xl p-6 sm:p-8 border border-slate-800/80 bg-gradient-to-br from-slate-900/90 via-[#0f172a]/70 to-[#0b0f19] backdrop-blur-2xl shadow-xl">
-          <div className="absolute top-0 right-0 -mt-10 -mr-10 w-64 h-64 rounded-full bg-teal-500/10 blur-3xl pointer-events-none" />
+      <main className="flex-1 max-w-6xl w-full mx-auto px-4 sm:px-6 py-6 space-y-6">
+        {/* Header */}
+        <div className="bg-card border border-border rounded-lg p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <h1 className="text-xl font-semibold text-foreground">
+              My Tickets
+            </h1>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              Support queries and thread history
+            </p>
+          </div>
 
-          <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
-            <div>
-              <div className="flex items-center gap-2 mb-2">
-                <span className="text-xs px-2.5 py-0.5 rounded-full bg-teal-500/10 text-teal-300 border border-teal-500/20 font-semibold flex items-center gap-1">
-                  <MessageSquare className="h-3.5 w-3.5" />
-                  Real-Time Support
-                </span>
-                <span className="text-xs text-slate-400">
-                  {activeTicketCount} Active Inquiries
-                </span>
-              </div>
-              <h1 className="font-heading text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
-                My Support Tickets & Inquiries
-              </h1>
-              <p className="text-xs sm:text-sm text-slate-400 mt-1 max-w-2xl">
-                View all support queries you have submitted, track live resolution status (`Open`, `In Progress`, `Resolved`, `Closed`), and view responses from the BookLeaf operations desk in real time.
-              </p>
-            </div>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => loadData(true)}
+              disabled={isRefreshing || isLoading}
+              className="p-2 text-xs rounded-md border border-border bg-card hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
+              title="Refresh"
+            >
+              <RefreshCw className={`h-3.5 w-3.5 ${isRefreshing ? "animate-spin" : ""}`} />
+            </button>
 
-            <div className="flex flex-wrap items-center gap-3">
-              <button
-                type="button"
-                onClick={() => loadData(true)}
-                disabled={isRefreshing || isLoading}
-                className="inline-flex items-center gap-2 px-3.5 py-2.5 rounded-xl text-xs font-semibold bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-700/80 transition-all disabled:opacity-50"
-              >
-                <RefreshCw
-                  className={`h-3.5 w-3.5 text-slate-400 ${isRefreshing ? "animate-spin text-teal-400" : ""}`}
-                />
-                <span>{isRefreshing ? "Refreshing..." : "Refresh Queue"}</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setIsModalOpen(true)}
-                className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold text-white bg-gradient-to-r from-teal-500 to-emerald-600 hover:from-teal-400 hover:to-emerald-500 shadow-lg shadow-teal-900/30 transition-all hover:scale-[1.02] active:scale-[0.98]"
-              >
-                <LifeBuoy className="h-4 w-4" />
-                <span>Submit a Support Query</span>
-              </button>
-            </div>
+            <button
+              type="button"
+              onClick={() => setIsModalOpen(true)}
+              className="px-3.5 py-1.5 rounded-md text-xs font-medium bg-primary text-primary-foreground hover:opacity-90 transition-opacity"
+            >
+              New Ticket
+            </button>
           </div>
         </div>
 
-        {/* Error Banner */}
+        {/* Error */}
         {error && (
-          <div className="p-4 rounded-2xl bg-rose-950/40 border border-rose-800/60 text-rose-300 text-xs flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <AlertCircle className="h-4 w-4 text-rose-400 flex-shrink-0" />
-              <span>{error}</span>
-            </div>
+          <div className="p-3 rounded-md bg-destructive/10 text-destructive text-xs flex items-center justify-between">
+            <span>{error}</span>
             <button
               type="button"
               onClick={() => loadData()}
-              className="px-3 py-1 rounded-lg bg-rose-900/40 hover:bg-rose-900/60 font-semibold"
+              className="font-medium underline"
             >
               Retry
             </button>
           </div>
         )}
 
-        {/* Tickets List Component */}
+        {/* List */}
         <AuthorTicketList
           tickets={tickets}
           isLoading={isLoading}
@@ -192,7 +158,6 @@ export default function MyTicketsPage() {
         />
       </main>
 
-      {/* Submit Support Query Modal */}
       <RaiseTicketModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}

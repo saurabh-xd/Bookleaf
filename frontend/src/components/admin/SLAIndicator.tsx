@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect } from "react";
 import type { Priority, TicketStatus } from "../../types/index";
-import { Clock, AlertTriangle, Flame, CheckCircle, ShieldAlert } from "lucide-react";
 
 interface SLAIndicatorProps {
   createdAt: string;
@@ -27,7 +26,6 @@ export const SLAIndicator: React.FC<SLAIndicatorProps> = ({
   const [now, setNow] = useState<number>(Date.now());
 
   useEffect(() => {
-    // Tick every 30 seconds for live countdown
     const interval = setInterval(() => {
       setNow(Date.now());
     }, 30000);
@@ -36,9 +34,8 @@ export const SLAIndicator: React.FC<SLAIndicatorProps> = ({
 
   if (status === "RESOLVED" || status === "CLOSED") {
     return (
-      <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-400 bg-emerald-950/40 px-2 py-0.5 rounded-md border border-emerald-800/40">
-        <CheckCircle className="h-3 w-3" />
-        <span>SLA Met</span>
+      <span className="text-[11px] font-medium text-muted-foreground px-2 py-0.5 rounded bg-muted border border-border">
+        SLA Met
       </span>
     );
   }
@@ -56,49 +53,36 @@ export const SLAIndicator: React.FC<SLAIndicatorProps> = ({
   if (isOverdue) {
     return (
       <span
-        className={`inline-flex items-center gap-1.5 font-bold rounded-md border animate-pulse ${
-          compact ? "text-[10px] px-1.5 py-0.5" : "text-[11px] px-2.5 py-1"
-        } bg-rose-950/80 text-rose-300 border-rose-600 shadow-sm shadow-rose-900/50`}
-        title={`SLA Breached! Target resolution was within ${SLA_HOURS_MAP[priority]} hours`}
+        className={`font-semibold rounded border border-destructive/40 bg-destructive/10 text-destructive ${
+          compact ? "text-[10px] px-1.5 py-0.5" : "text-[11px] px-2 py-0.5"
+        }`}
       >
-        <Flame className="h-3.5 w-3.5 text-rose-400" />
-        <span>
-          OVERDUE +{hours}h {minutes}m
-        </span>
+        Overdue +{hours}h {minutes}m
       </span>
     );
   }
 
-  // Warning threshold: less than 25% time left or less than 1 hour left
   const isWarning = remainingMs < allowedMs * 0.25 || remainingMs < 60 * 60 * 1000;
 
   if (isWarning) {
     return (
       <span
-        className={`inline-flex items-center gap-1.5 font-semibold rounded-md border ${
-          compact ? "text-[10px] px-1.5 py-0.5" : "text-[11px] px-2.5 py-1"
-        } bg-amber-950/60 text-amber-300 border-amber-600/60`}
+        className={`font-medium rounded border border-amber-500/40 bg-amber-500/10 text-amber-700 dark:text-amber-400 ${
+          compact ? "text-[10px] px-1.5 py-0.5" : "text-[11px] px-2 py-0.5"
+        }`}
       >
-        <AlertTriangle className="h-3.5 w-3.5 text-amber-400" />
-        <span>
-          {hours > 0 ? `${hours}h ` : ""}
-          {minutes}m remaining
-        </span>
+        {hours > 0 ? `${hours}h ` : ""}{minutes}m left
       </span>
     );
   }
 
   return (
     <span
-      className={`inline-flex items-center gap-1.5 font-medium rounded-md border ${
-        compact ? "text-[10px] px-1.5 py-0.5" : "text-[11px] px-2.5 py-1"
-      } bg-slate-900/80 text-slate-300 border-slate-700/60`}
+      className={`font-medium rounded border border-border bg-muted text-muted-foreground ${
+        compact ? "text-[10px] px-1.5 py-0.5" : "text-[11px] px-2 py-0.5"
+      }`}
     >
-      <Clock className="h-3 w-3 text-slate-400" />
-      <span>
-        {hours > 0 ? `${hours}h ` : ""}
-        {minutes}m left ({SLA_HOURS_MAP[priority]}h SLA)
-      </span>
+      {hours > 0 ? `${hours}h ` : ""}{minutes}m left ({SLA_HOURS_MAP[priority]}h SLA)
     </span>
   );
 };

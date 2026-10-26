@@ -8,7 +8,7 @@ import { api } from "../../../lib/api";
 import type { Ticket } from "../../../types/index";
 import { Navbar } from "../../../components/common/Navbar";
 import { AuthorTicketDetail } from "../../../components/author/AuthorTicketDetail";
-import { ArrowLeft, Loader2, AlertCircle } from "lucide-react";
+import { ArrowLeft, Loader2 } from "lucide-react";
 
 function TicketDetailContent() {
   const params = useParams();
@@ -21,10 +21,8 @@ function TicketDetailContent() {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Connect to SSE stream
   const { isConnected, lastEvent } = useSSE(token);
 
-  // Redirect unauthenticated users to /login
   useEffect(() => {
     if (!authLoading && !user) {
       router.replace("/login");
@@ -40,8 +38,7 @@ function TicketDetailContent() {
         setTicket(res.data);
       }
     } catch (err: any) {
-      console.error("Failed to load ticket details:", err);
-      setError(err?.message || "Inquiry not found or access denied.");
+      setError(err?.message || "Ticket not found.");
     } finally {
       setIsLoading(false);
     }
@@ -55,15 +52,10 @@ function TicketDetailContent() {
 
   if (authLoading || isLoading) {
     return (
-      <div className="min-h-screen flex flex-col bg-[#0b0f19]">
+      <div className="min-h-screen flex flex-col bg-background text-foreground">
         <Navbar />
-        <main className="flex-1 max-w-5xl w-full mx-auto px-4 sm:px-6 py-12 flex items-center justify-center">
-          <div className="text-center space-y-3">
-            <Loader2 className="h-8 w-8 text-teal-400 animate-spin mx-auto" />
-            <p className="text-xs text-slate-400 font-medium">
-              Loading support conversation thread...
-            </p>
-          </div>
+        <main className="flex-1 max-w-4xl w-full mx-auto px-4 sm:px-6 py-12 flex items-center justify-center">
+          <Loader2 className="h-6 w-6 text-primary animate-spin" />
         </main>
       </div>
     );
@@ -71,24 +63,21 @@ function TicketDetailContent() {
 
   if (error || !ticket) {
     return (
-      <div className="min-h-screen flex flex-col bg-[#0b0f19]">
+      <div className="min-h-screen flex flex-col bg-background text-foreground">
         <Navbar />
-        <main className="flex-1 max-w-3xl w-full mx-auto px-4 sm:px-6 py-12">
-          <div className="glass-panel rounded-2xl p-8 border border-slate-800 text-center space-y-4">
-            <AlertCircle className="h-10 w-10 text-rose-400 mx-auto" />
-            <h2 className="font-heading text-lg font-bold text-white">
-              Support Inquiry Unavailable
+        <main className="flex-1 max-w-2xl w-full mx-auto px-4 sm:px-6 py-12">
+          <div className="bg-card border border-border rounded-lg p-6 text-center space-y-3">
+            <h2 className="text-sm font-semibold text-foreground">
+              Ticket Unavailable
             </h2>
-            <p className="text-xs text-slate-400">
-              {error || "The requested ticket does not exist or belongs to another author."}
-            </p>
+            <p className="text-xs text-muted-foreground">{error || "Not found."}</p>
             <button
               type="button"
               onClick={() => router.push("/tickets")}
-              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 transition-colors"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs border border-border hover:bg-muted"
             >
-              <ArrowLeft className="h-4 w-4" />
-              <span>Back to My Tickets</span>
+              <ArrowLeft className="h-3.5 w-3.5" />
+              <span>Back to Tickets</span>
             </button>
           </div>
         </main>
@@ -97,10 +86,10 @@ function TicketDetailContent() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#0b0f19]">
+    <div className="min-h-screen flex flex-col bg-background text-foreground">
       <Navbar sseConnected={isConnected} />
 
-      <main className="flex-1 max-w-5xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10">
+      <main className="flex-1 max-w-4xl w-full mx-auto px-4 sm:px-6 py-6">
         <AuthorTicketDetail
           ticket={ticket}
           onBack={() => router.push("/tickets")}
@@ -116,8 +105,8 @@ export default function TicketDetailPage() {
   return (
     <Suspense
       fallback={
-        <div className="min-h-screen flex items-center justify-center bg-[#0b0f19]">
-          <div className="w-8 h-8 border-2 border-teal-500 border-t-transparent rounded-full animate-spin" />
+        <div className="min-h-screen flex items-center justify-center bg-background text-foreground">
+          <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
         </div>
       }
     >

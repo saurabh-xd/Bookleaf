@@ -3,24 +3,11 @@
 import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { useAuth } from "../../context/AuthContext";
 import { api } from "../../lib/api";
-import type { Ticket, TicketStatus, Priority, TicketCategory } from "../../types/index";
+import type { Ticket, Priority } from "../../types/index";
 import { UrgencyFilters, type FilterState } from "./UrgencyFilters";
 import { AdminQueue } from "./AdminQueue";
 import { TicketResolutionWorkspace } from "./TicketResolutionWorkspace";
-import {
-  ShieldAlert,
-  Inbox,
-  Flame,
-  AlertTriangle,
-  CheckCircle2,
-  Sparkles,
-  Users,
-  RefreshCw,
-  Bell,
-  X,
-  Clock,
-  ArrowRight,
-} from "lucide-react";
+import { RefreshCw, X } from "lucide-react";
 
 interface AdminDashboardProps {
   lastSSEEvent?: any;
@@ -38,7 +25,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   lastSSEEvent,
   onSelectTicket,
 }) => {
-  const { user, switchDemoUser } = useAuth();
+  const { user } = useAuth();
   const [tickets, setTickets] = useState<Ticket[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
@@ -51,7 +38,6 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
     authorName: string;
   } | null>(null);
 
-  // Filters State
   const [filters, setFilters] = useState<FilterState>({
     status: "ALL",
     category: "ALL",
@@ -87,27 +73,24 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
     loadTickets();
   }, [loadTickets]);
 
-  // Reactive SSE Event Handler
   useEffect(() => {
     if (!lastSSEEvent) return;
+    const { event, data } = lastSSEEvent;
 
-    const { type, data } = lastSSEEvent;
-
-    if (type === "TICKET_CREATED") {
+    if (event === "TICKET_CREATED") {
       setIncomingAlert({
         ticketId: data.id || data.ticket?.id,
-        ticketNumber: data.ticketNumber || data.ticket?.ticketNumber || "TICK-NEW",
-        subject: data.subject || data.ticket?.subject || "New Author Inquiry",
+        ticketNumber: data.ticketNumber || data.ticket?.ticketNumber || "TICK",
+        subject: data.subject || data.ticket?.subject || "New inquiry",
         priority: data.priority || data.ticket?.priority || "MEDIUM",
         authorName: data.author?.name || data.ticket?.author?.name || "Author",
       });
       loadTickets(true);
-    } else if (type === "TICKET_UPDATED" || type === "NEW_MESSAGE") {
+    } else if (event === "TICKET_UPDATED" || event === "NEW_MESSAGE") {
       loadTickets(true);
     }
   }, [lastSSEEvent, loadTickets]);
 
-  // Check if a ticket has breached SLA
   const isTicketBreached = useCallback((ticket: Ticket): boolean => {
     if (ticket.status === "RESOLVED" || ticket.status === "CLOSED") return false;
     const createdTime = new Date(ticket.createdAt).getTime();
@@ -115,7 +98,6 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
     return Date.now() > createdTime + allowedMs;
   }, []);
 
-  // Compute Queue Counts
   const counts = useMemo(() => {
     let critical = 0;
     let high = 0;
@@ -137,7 +119,6 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
     };
   }, [tickets, isTicketBreached]);
 
-  // Filter & Sort tickets
   const filteredTickets = useMemo(() => {
     return tickets
       .filter((t) => {
@@ -185,7 +166,6 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
     }
   };
 
-  // If a ticket is currently open in resolution workspace, render that view!
   if (selectedTicket) {
     return (
       <TicketResolutionWorkspace
@@ -205,24 +185,16 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
 
   return (
     <div className="space-y-6">
-      {/* Real-Time Incoming Ticket Alert Banner */}
+      {/* Alert Banner */}
       {incomingAlert && (
-        <div className="p-4 rounded-2xl bg-gradient-to-r from-amber-500/20 via-amber-900/30 to-amber-950/40 border border-amber-500/40 shadow-xl backdrop-blur-xl flex items-center justify-between gap-4 animate-in slide-in-from-top-4 duration-300">
-          <div className="flex items-center gap-3">
-            <div className="p-2 rounded-xl bg-amber-500/20 text-amber-300 animate-bounce">
-              <Bell className="h-5 w-5" />
-            </div>
-            <div>
-              <p className="text-xs font-bold text-amber-200 flex items-center gap-2">
-                <span>New Incoming Ticket: {incomingAlert.ticketNumber}</span>
-                <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-amber-950/80 border border-amber-800">
-                  {incomingAlert.priority} Urgency
-                </span>
-              </p>
-              <p className="text-[11px] text-slate-300 mt-0.5">
-                From <strong className="text-white">{incomingAlert.authorName}</strong>: &quot;{incomingAlert.subject}&quot;
-              </p>
-            </div>
+        <div className="p-3 rounded-md bg-muted border border-border flex items-center justify-between gap-3 text-xs">
+          <div>
+            <span className="font-semibold text-foreground">
+              New: {incomingAlert.ticketNumber} ({incomingAlert.priority})
+            </span>
+            <span className="text-muted-foreground ml-2">
+              From {incomingAlert.authorName}: {incomingAlert.subject}
+            </span>
           </div>
 
           <div className="flex items-center gap-2">
@@ -230,162 +202,81 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
               type="button"
               onClick={() => {
                 const target = tickets.find((t) => t.id === incomingAlert.ticketId);
-                if (target) {
-                  setSelectedTicket(target);
-                }
+                if (target) setSelectedTicket(target);
                 setIncomingAlert(null);
               }}
-              className="px-3 py-1.5 rounded-xl bg-amber-500 text-slate-950 text-xs font-bold hover:bg-amber-400 transition-colors"
+              className="text-xs underline font-medium text-foreground"
             >
-              View Ticket
+              Open
             </button>
             <button
               type="button"
               onClick={() => setIncomingAlert(null)}
-              className="p-1 rounded-lg text-slate-400 hover:text-white"
+              className="text-muted-foreground hover:text-foreground"
             >
-              <X className="h-4 w-4" />
+              <X className="h-3.5 w-3.5" />
             </button>
           </div>
         </div>
       )}
 
-      {/* Admin Dashboard Operations Header */}
-      <div className="relative overflow-hidden rounded-3xl p-6 sm:p-8 border border-slate-800/80 bg-gradient-to-br from-slate-900/90 via-[#0f172a]/70 to-[#0b0f19] backdrop-blur-2xl shadow-xl">
-        <div className="absolute top-0 right-0 -mt-10 -mr-10 w-64 h-64 rounded-full bg-amber-500/10 blur-3xl pointer-events-none" />
+      {/* Header */}
+      <div className="bg-card border border-border rounded-lg p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-xl font-semibold text-foreground">
+            Operations Queue
+          </h1>
+          <p className="text-xs text-muted-foreground mt-0.5">
+            {user?.email || "admin@bookleaf.com"}
+          </p>
+        </div>
 
-        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
-          <div className="flex items-start sm:items-center gap-4">
-            <div className="w-16 h-16 rounded-2xl bg-gradient-to-tr from-amber-500 to-amber-300 p-0.5 shadow-lg flex-shrink-0">
-              <div className="w-full h-full rounded-2xl bg-slate-900 flex items-center justify-center text-amber-300 font-heading font-extrabold text-xl">
-                OP
-              </div>
-            </div>
+        <button
+          type="button"
+          onClick={() => loadTickets(true)}
+          disabled={isRefreshing || isLoading}
+          className="p-2 text-xs rounded-md border border-border bg-card hover:bg-muted text-muted-foreground hover:text-foreground transition-colors self-start sm:self-auto"
+          title="Refresh"
+        >
+          <RefreshCw className={`h-3.5 w-3.5 ${isRefreshing ? "animate-spin" : ""}`} />
+        </button>
+      </div>
 
-            <div>
-              <div className="flex flex-wrap items-center gap-2 mb-1">
-                <h1 className="font-heading text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
-                  Operations Triage Board
-                </h1>
-                <span className="text-[11px] px-2.5 py-0.5 rounded-full bg-amber-950/60 text-amber-300 border border-amber-800/60 font-semibold inline-flex items-center gap-1">
-                  <ShieldAlert className="h-3 w-3 text-amber-400" />
-                  Operations Admin
-                </span>
-                <span className="text-[11px] px-2.5 py-0.5 rounded-full bg-slate-800 text-slate-300 border border-slate-700">
-                  {user?.email || "admin@bookleaf.com"}
-                </span>
-              </div>
+      {/* Stat Cards */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+        <div className="bg-card border border-border rounded-lg p-4">
+          <span className="text-xs font-medium text-muted-foreground">Active Queue</span>
+          <p className="text-2xl font-semibold text-foreground mt-2">{counts.total}</p>
+        </div>
 
-              <p className="text-xs text-slate-400">
-                Prioritized support queue powered by Vercel AI SDK auto-classification, SLA timers, and pgvector knowledge retrieval.
-              </p>
-            </div>
-          </div>
+        <div className="bg-card border border-border rounded-lg p-4">
+          <span className="text-xs font-medium text-muted-foreground">Critical (&lt;4h)</span>
+          <p className="text-2xl font-semibold text-destructive mt-2">{counts.critical}</p>
+        </div>
 
-          {/* Quick Header Actions */}
-          <div className="flex flex-wrap items-center gap-3">
-            <button
-              type="button"
-              onClick={() => loadTickets(true)}
-              disabled={isRefreshing || isLoading}
-              className="inline-flex items-center gap-2 px-3.5 py-2.5 rounded-xl text-xs font-semibold bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-700/80 transition-all disabled:opacity-50"
-            >
-              <RefreshCw
-                className={`h-3.5 w-3.5 text-slate-400 ${isRefreshing ? "animate-spin text-amber-400" : ""}`}
-              />
-              <span>{isRefreshing ? "Refreshing..." : "Refresh Queue"}</span>
-            </button>
+        <div className="bg-card border border-border rounded-lg p-4">
+          <span className="text-xs font-medium text-muted-foreground">Overdue</span>
+          <p className="text-2xl font-semibold text-amber-600 dark:text-amber-400 mt-2">{counts.breached}</p>
+        </div>
 
-            <button
-              type="button"
-              onClick={() => switchDemoUser("AUTHOR")}
-              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold text-slate-200 bg-slate-800 hover:bg-slate-700 border border-slate-700 transition-all"
-            >
-              <Users className="h-4 w-4 text-teal-400" />
-              <span>Switch to Author Portal</span>
-            </button>
-          </div>
+        <div className="bg-card border border-border rounded-lg p-4">
+          <span className="text-xs font-medium text-muted-foreground">AI Triage</span>
+          <p className="text-2xl font-semibold text-foreground mt-2">100%</p>
         </div>
       </div>
 
-      {/* Operational Metrics Cards (4 Stat Cards) */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {/* Total Active Queue */}
-        <div className="glass-card rounded-2xl p-5 border border-slate-800/80">
-          <div className="flex items-center justify-between mb-3">
-            <span className="text-xs font-medium text-slate-400">Active Queue</span>
-            <div className="p-2 rounded-xl bg-slate-800 text-slate-300">
-              <Inbox className="h-4 w-4" />
-            </div>
-          </div>
-          <p className="font-heading text-3xl font-extrabold text-white tracking-tight">
-            {counts.total}
-          </p>
-          <p className="text-[11px] text-slate-400 mt-1">Pending author inquiries</p>
-        </div>
-
-        {/* Critical Urgency (<4h SLA) */}
-        <div className="glass-card rounded-2xl p-5 border border-rose-900/40 bg-gradient-to-br from-slate-900 to-rose-950/20">
-          <div className="flex items-center justify-between mb-3">
-            <span className="text-xs font-medium text-rose-300">Critical (&lt;4h SLA)</span>
-            <div className="p-2 rounded-xl bg-rose-500/10 text-rose-400 border border-rose-500/20">
-              <Flame className="h-4 w-4" />
-            </div>
-          </div>
-          <p className="font-heading text-3xl font-extrabold text-rose-200 tracking-tight">
-            {counts.critical}
-          </p>
-          <p className="text-[11px] text-rose-300/80 mt-1">Print flaws & urgent legal issues</p>
-        </div>
-
-        {/* SLA At Risk / Breached */}
-        <div className="glass-card rounded-2xl p-5 border border-amber-900/40 bg-gradient-to-br from-slate-900 to-amber-950/20">
-          <div className="flex items-center justify-between mb-3">
-            <span className="text-xs font-medium text-amber-300">SLA At Risk / Breached</span>
-            <div className="p-2 rounded-xl bg-amber-500/10 text-amber-400 border border-amber-500/20">
-              <AlertTriangle className="h-4 w-4" />
-            </div>
-          </div>
-          <p className="font-heading text-3xl font-extrabold text-amber-200 tracking-tight">
-            {counts.breached}
-          </p>
-          <p className="text-[11px] text-amber-300/80 mt-1">Requires immediate intervention</p>
-        </div>
-
-        {/* AI Auto-Triage Rate */}
-        <div className="glass-card rounded-2xl p-5 border border-slate-800/80">
-          <div className="flex items-center justify-between mb-3">
-            <span className="text-xs font-medium text-slate-400">AI Triage Rate</span>
-            <div className="p-2 rounded-xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-              <Sparkles className="h-4 w-4" />
-            </div>
-          </div>
-          <p className="font-heading text-3xl font-extrabold text-emerald-300 tracking-tight">
-            100%
-          </p>
-          <p className="text-[11px] text-slate-400 mt-1">Vercel AI SDK + pgvector drafts</p>
-        </div>
-      </div>
-
-      {/* Urgency Filters Bar */}
+      {/* Filters */}
       <UrgencyFilters
         filters={filters}
         onFilterChange={setFilters}
         counts={counts}
       />
 
-      {/* Admin Queue Table / Card List */}
+      {/* Queue List */}
       <div>
-        <div className="flex items-center justify-between mb-3">
-          <h3 className="font-heading text-base font-bold text-white flex items-center gap-2">
-            <span>Triage Queue</span>
-            <span className="text-xs px-2.5 py-0.5 rounded-full bg-slate-800 text-slate-300 border border-slate-700">
-              {filteredTickets.length} {filteredTickets.length === 1 ? "Ticket" : "Tickets"}
-            </span>
-          </h3>
-          <span className="text-xs text-slate-400">
-            Sorted by: <strong className="text-amber-400">{filters.sortBy === "urgent" ? "Urgency First" : filters.sortBy}</strong>
-          </span>
+        <div className="flex items-center justify-between mb-2.5 text-xs text-muted-foreground">
+          <span>Tickets ({filteredTickets.length})</span>
+          <span>Sort: {filters.sortBy}</span>
         </div>
 
         <AdminQueue

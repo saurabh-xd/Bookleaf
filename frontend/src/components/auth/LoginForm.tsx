@@ -3,18 +3,7 @@
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "../../context/AuthContext";
-import {
-  BookOpen,
-  Lock,
-  Mail,
-  ArrowRight,
-  ShieldAlert,
-  User,
-  AlertCircle,
-  Loader2,
-  Sparkles,
-  KeyRound,
-} from "lucide-react";
+import { Loader2 } from "lucide-react";
 
 export const LoginForm: React.FC = () => {
   const { login } = useAuth();
@@ -27,7 +16,7 @@ export const LoginForm: React.FC = () => {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email || !password) {
-      setError("Please enter both email and password.");
+      setError("Please enter email and password.");
       return;
     }
 
@@ -38,7 +27,7 @@ export const LoginForm: React.FC = () => {
       await login(email.trim(), password);
       router.push("/");
     } catch (err: any) {
-      setError(err?.message || "Invalid email or password. Please try again.");
+      setError(err?.message || "Invalid email or password.");
     } finally {
       setIsSubmitting(false);
     }
@@ -60,169 +49,116 @@ export const LoginForm: React.FC = () => {
   };
 
   return (
-    <div className="min-h-[85vh] flex items-center justify-center px-4 py-12">
-      <div className="w-full max-w-md space-y-6">
-        {/* Brand Header */}
-        <div className="text-center space-y-2">
-          <div className="inline-flex items-center justify-center h-14 w-14 rounded-2xl bg-gradient-to-tr from-emerald-500 to-teal-400 p-[1px] shadow-xl shadow-emerald-500/20 mb-2">
-            <div className="h-full w-full rounded-2xl bg-slate-950 flex items-center justify-center">
-              <BookOpen className="h-7 w-7 text-emerald-400" />
-            </div>
-          </div>
-          <h1 className="font-heading text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
-            BookLeaf Publishing
+    <div className="min-h-[80vh] flex items-center justify-center px-4 py-8">
+      <div className="w-full max-w-sm space-y-4">
+        {/* Brand */}
+        <div className="text-center space-y-1">
+          <h1 className="text-xl font-semibold text-foreground">
+            BookLeaf Portal
           </h1>
-          <p className="text-xs sm:text-sm text-slate-400">
-            Author Support & Operations Communication Portal
+          <p className="text-xs text-muted-foreground">
+            Sign in to access author dashboard & support
           </p>
         </div>
 
-        {/* Login Card */}
-        <div className="glass-panel rounded-3xl p-6 sm:p-8 border border-slate-800/80 shadow-2xl relative overflow-hidden">
-          <div className="absolute top-0 right-0 -mt-8 -mr-8 w-40 h-40 rounded-full bg-emerald-500/10 blur-2xl pointer-events-none" />
-
-          <h2 className="font-heading text-lg font-bold text-white mb-1">
-            Sign In to Your Account
-          </h2>
-          <p className="text-xs text-slate-400 mb-6">
-            Enter your credentials to access your published titles, royalties, and support queries.
-          </p>
-
+        {/* Card */}
+        <div className="bg-card border border-border rounded-lg p-5 shadow-xs">
           {error && (
-            <div className="mb-5 p-3.5 rounded-xl bg-rose-950/40 border border-rose-800/60 text-rose-300 text-xs flex items-center gap-2 animate-in fade-in">
-              <AlertCircle className="h-4 w-4 text-rose-400 flex-shrink-0" />
-              <span>{error}</span>
+            <div className="mb-4 p-2.5 rounded bg-destructive/10 text-destructive text-xs">
+              {error}
             </div>
           )}
 
-          <form onSubmit={handleLogin} className="space-y-4">
+          <form onSubmit={handleLogin} className="space-y-3">
             <div>
-              <label className="block text-xs font-semibold text-slate-300 mb-1.5">
-                Email Address
+              <label className="block text-xs font-medium text-foreground mb-1">
+                Email
               </label>
-              <div className="relative">
-                <Mail className="h-4 w-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
-                <input
-                  type="email"
-                  required
-                  placeholder="author@email.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  disabled={isSubmitting}
-                  className="w-full pl-10 pr-4 py-2.5 text-xs rounded-xl bg-slate-900 border border-slate-700 text-slate-200 placeholder-slate-500 focus:outline-none focus:border-teal-500 transition-colors"
-                />
-              </div>
+              <input
+                type="email"
+                required
+                placeholder="author@email.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                disabled={isSubmitting}
+                className="w-full px-3 py-2 text-xs rounded-md bg-card border border-border text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+              />
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-slate-300 mb-1.5">
+              <label className="block text-xs font-medium text-foreground mb-1">
                 Password
               </label>
-              <div className="relative">
-                <Lock className="h-4 w-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
-                <input
-                  type="password"
-                  required
-                  placeholder="••••••••"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  disabled={isSubmitting}
-                  className="w-full pl-10 pr-4 py-2.5 text-xs rounded-xl bg-slate-900 border border-slate-700 text-slate-200 placeholder-slate-500 focus:outline-none focus:border-teal-500 transition-colors"
-                />
-              </div>
+              <input
+                type="password"
+                required
+                placeholder="••••••••"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                disabled={isSubmitting}
+                className="w-full px-3 py-2 text-xs rounded-md bg-card border border-border text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+              />
             </div>
 
             <button
               type="submit"
               disabled={isSubmitting}
-              className="w-full mt-2 inline-flex items-center justify-center gap-2 py-3 px-4 rounded-xl text-xs font-bold text-white bg-gradient-to-r from-teal-500 to-emerald-600 hover:from-teal-400 hover:to-emerald-500 shadow-lg shadow-teal-900/30 transition-all hover:scale-[1.01] active:scale-[0.99] disabled:opacity-50"
+              className="w-full py-2 px-3 rounded-md text-xs font-medium bg-primary text-primary-foreground hover:opacity-90 disabled:opacity-50 flex items-center justify-center gap-1.5"
             >
               {isSubmitting ? (
                 <>
-                  <Loader2 className="h-4 w-4 animate-spin" />
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
                   <span>Signing in...</span>
                 </>
               ) : (
-                <>
-                  <span>Sign In</span>
-                  <ArrowRight className="h-4 w-4" />
-                </>
+                <span>Sign In</span>
               )}
             </button>
           </form>
 
-          {/* Quick-Fill Demo Credentials Section */}
-          <div className="mt-6 pt-5 border-t border-slate-800">
-            <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-400 mb-3">
-              <Sparkles className="h-3.5 w-3.5 text-teal-400" />
-              <span>Quick-Fill Demo Credentials (1-Click Login):</span>
-            </div>
-
-            <div className="space-y-2">
+          {/* Quick presets */}
+          <div className="mt-5 pt-4 border-t border-border">
+            <span className="text-[11px] text-muted-foreground block mb-2 font-medium">
+              Demo Logins (1-Click):
+            </span>
+            <div className="space-y-1.5">
               <button
                 type="button"
                 onClick={() => fillCredentials("priya.sharma@email.com", "Author@123")}
                 disabled={isSubmitting}
-                className="w-full flex items-center justify-between p-2.5 rounded-xl bg-slate-900/90 hover:bg-slate-800/90 border border-slate-800 hover:border-teal-500/40 text-left transition-all group"
+                className="w-full p-2 rounded-md border border-border hover:bg-muted text-left text-xs flex justify-between items-center transition-colors"
               >
-                <div className="flex items-center gap-2.5">
-                  <div className="p-1.5 rounded-lg bg-teal-500/10 text-teal-400 border border-teal-500/20">
-                    <User className="h-3.5 w-3.5" />
-                  </div>
-                  <div>
-                    <p className="text-xs font-bold text-slate-200 group-hover:text-teal-300 transition-colors">
-                      Priya Sharma (Author)
-                    </p>
-                    <p className="text-[11px] text-slate-400">
-                      AUTH001 • 2 published titles • ₹19.9k royalties
-                    </p>
-                  </div>
+                <div>
+                  <span className="font-medium text-foreground block">Priya Sharma</span>
+                  <span className="text-[10px] text-muted-foreground">Author (AUTH001)</span>
                 </div>
-                <ArrowRight className="h-3.5 w-3.5 text-slate-500 group-hover:text-teal-400 group-hover:translate-x-0.5 transition-all" />
+                <span className="text-[11px] text-muted-foreground">&rarr;</span>
               </button>
 
               <button
                 type="button"
                 onClick={() => fillCredentials("rohit.kapoor@email.com", "Author@123")}
                 disabled={isSubmitting}
-                className="w-full flex items-center justify-between p-2.5 rounded-xl bg-slate-900/90 hover:bg-slate-800/90 border border-slate-800 hover:border-teal-500/40 text-left transition-all group"
+                className="w-full p-2 rounded-md border border-border hover:bg-muted text-left text-xs flex justify-between items-center transition-colors"
               >
-                <div className="flex items-center gap-2.5">
-                  <div className="p-1.5 rounded-lg bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-                    <User className="h-3.5 w-3.5" />
-                  </div>
-                  <div>
-                    <p className="text-xs font-bold text-slate-200 group-hover:text-teal-300 transition-colors">
-                      Rohit Kapoor (Author)
-                    </p>
-                    <p className="text-[11px] text-slate-400">
-                      AUTH002 • 2 poetry titles • Isolated catalog
-                    </p>
-                  </div>
+                <div>
+                  <span className="font-medium text-foreground block">Rohit Kapoor</span>
+                  <span className="text-[10px] text-muted-foreground">Author (AUTH002)</span>
                 </div>
-                <ArrowRight className="h-3.5 w-3.5 text-slate-500 group-hover:text-teal-400 group-hover:translate-x-0.5 transition-all" />
+                <span className="text-[11px] text-muted-foreground">&rarr;</span>
               </button>
 
               <button
                 type="button"
                 onClick={() => fillCredentials("admin@bookleaf.com", "Admin@123")}
                 disabled={isSubmitting}
-                className="w-full flex items-center justify-between p-2.5 rounded-xl bg-slate-900/90 hover:bg-slate-800/90 border border-slate-800 hover:border-amber-500/40 text-left transition-all group"
+                className="w-full p-2 rounded-md border border-border hover:bg-muted text-left text-xs flex justify-between items-center transition-colors"
               >
-                <div className="flex items-center gap-2.5">
-                  <div className="p-1.5 rounded-lg bg-amber-500/10 text-amber-400 border border-amber-500/20">
-                    <ShieldAlert className="h-3.5 w-3.5" />
-                  </div>
-                  <div>
-                    <p className="text-xs font-bold text-slate-200 group-hover:text-amber-300 transition-colors">
-                      Operations Admin Desk
-                    </p>
-                    <p className="text-[11px] text-slate-400">
-                      admin@bookleaf.com • Urgency queue & SLA timers
-                    </p>
-                  </div>
+                <div>
+                  <span className="font-medium text-foreground block">Operations Admin</span>
+                  <span className="text-[10px] text-muted-foreground">Admin</span>
                 </div>
-                <ArrowRight className="h-3.5 w-3.5 text-slate-500 group-hover:text-amber-400 group-hover:translate-x-0.5 transition-all" />
+                <span className="text-[11px] text-muted-foreground">&rarr;</span>
               </button>
             </div>
           </div>
