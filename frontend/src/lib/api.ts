@@ -10,7 +10,10 @@ import type {
   TicketStatus,
 } from "../types/index";
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
+const rawUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
+const API_BASE_URL = rawUrl.endsWith("/api")
+  ? rawUrl
+  : `${rawUrl.replace(/\/+$/, "")}/api`;
 
 const getAuthToken = (): string | null => {
   if (typeof window === "undefined") return null;
