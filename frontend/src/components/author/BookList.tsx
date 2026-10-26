@@ -258,7 +258,7 @@ export const BookList: React.FC<BookListProps> = ({ books, onRaiseTicketForBook 
                       className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold bg-teal-500/10 text-teal-300 hover:bg-teal-500/20 border border-teal-500/30 transition-all hover:scale-[1.02] active:scale-[0.98]"
                     >
                       <LifeBuoy className="h-3.5 w-3.5 text-teal-400" />
-                      <span>Inquire About This Book</span>
+                      <span>Submit Query for this Book</span>
                     </button>
                   )}
                 </div>

@@ -172,7 +172,7 @@ export const RaiseTicketModal: React.FC<RaiseTicketModalProps> = ({
           </div>
           <div>
             <h3 className="font-heading text-xl font-bold text-white tracking-tight">
-              Raise Author Support Ticket
+              Submit a Support Query
             </h3>
             <p className="text-xs text-slate-400">
               Analyzed and auto-triaged by BookLeaf AI with pgvector knowledge base retrieval.
@@ -200,7 +200,7 @@ export const RaiseTicketModal: React.FC<RaiseTicketModalProps> = ({
               disabled={isSubmitting}
               className="w-full text-xs rounded-xl bg-slate-900 border border-slate-700 px-3.5 py-2.5 text-slate-200 focus:outline-none focus:border-teal-500"
             >
-              <option value="">General Inquiry (No specific book)</option>
+              <option value="">General / Account Level</option>
               {books.map((b) => (
                 <option key={b.id} value={b.id}>
                   {b.title} (ISBN: {b.isbn})
@@ -341,7 +341,7 @@ export const RaiseTicketModal: React.FC<RaiseTicketModalProps> = ({
                 ) : (
                   <>
                     <LifeBuoy className="h-4 w-4" />
-                    <span>Submit Ticket</span>
+                    <span>Submit Support Query</span>
                   </>
                 )}
               </button>

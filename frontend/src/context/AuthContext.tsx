@@ -82,12 +82,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             localStorage.setItem("bookleaf_user", JSON.stringify(me.data));
           }
         } catch {
-          // Token expired or invalid, auto-login default demo author
-          await switchDemoUser("AUTHOR");
+          // Token expired or invalid, clear session
+          logout();
         }
-      } else {
-        // First visit: Auto-login as default author (Priya Sharma) for immediate review
-        await switchDemoUser("AUTHOR");
       }
       setIsLoading(false);
     };

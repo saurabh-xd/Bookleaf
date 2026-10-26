@@ -220,7 +220,7 @@ export const AuthorDashboard: React.FC<AuthorDashboardProps> = ({ lastSSEEvent }
               className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold text-white bg-gradient-to-r from-teal-500 to-emerald-600 hover:from-teal-400 hover:to-emerald-500 shadow-lg shadow-teal-900/30 transition-all hover:scale-[1.02] active:scale-[0.98]"
             >
               <LifeBuoy className="h-4 w-4" />
-              <span>Raise Support Ticket</span>
+              <span>Submit a Support Query</span>
             </button>
           </div>
         </div>
@@ -269,7 +269,7 @@ export const AuthorDashboard: React.FC<AuthorDashboardProps> = ({ lastSSEEvent }
           }`}
         >
           <BookOpen className="h-4 w-4" />
-          <span>My Books & Distribution</span>
+          <span>My Books</span>
           <span className="px-2 py-0.5 text-[11px] rounded-full bg-slate-800 text-slate-300">
             {books.length}
           </span>
@@ -285,7 +285,7 @@ export const AuthorDashboard: React.FC<AuthorDashboardProps> = ({ lastSSEEvent }
           }`}
         >
           <MessageSquare className="h-4 w-4" />
-          <span>Support Tickets & Chat</span>
+          <span>My Tickets</span>
           <span
             className={`px-2 py-0.5 text-[11px] rounded-full font-bold ${
               activeTicketCount > 0

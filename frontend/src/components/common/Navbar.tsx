@@ -1,17 +1,23 @@
 "use client";
 
-import React from "react";
+import { useRouter } from "next/navigation";
 import { useAuth } from "../../context/AuthContext";
-import { BookOpen, ShieldCheck, User, RefreshCw, Radio } from "lucide-react";
+import { BookOpen, ShieldCheck, User, Radio, LogOut } from "lucide-react";
 
 interface NavbarProps {
   sseConnected?: boolean;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({ sseConnected = false }) => {
-  const { user, switchDemoUser, isLoading } = useAuth();
+  const { user, switchDemoUser, logout, isLoading } = useAuth();
+  const router = useRouter();
 
   const isAuthor = user?.role === "AUTHOR";
+
+  const handleLogout = () => {
+    logout();
+    router.push("/login");
+  };
 
   return (
     <header className="sticky top-0 z-40 w-full border-b border-slate-800/80 bg-[#0b0f19]/80 backdrop-blur-xl">
@@ -40,66 +46,84 @@ export const Navbar: React.FC<NavbarProps> = ({ sseConnected = false }) => {
 
         {/* Center / Right controls */}
         <div className="flex items-center gap-3 sm:gap-4">
-          {/* Live SSE Stream Status Indicator */}
-          <div
-            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border transition-colors ${
-              sseConnected
-                ? "bg-emerald-950/40 border-emerald-800/50 text-emerald-400"
-                : "bg-slate-900 border-slate-800 text-slate-400"
-            }`}
-            title={sseConnected ? "Real-time updates active" : "Connecting to event stream..."}
-          >
-            <span
-              className={`h-2 w-2 rounded-full ${
-                sseConnected ? "bg-emerald-400 animate-pulse" : "bg-slate-500"
-              }`}
-            />
-            <span className="hidden sm:inline">
-              {sseConnected ? "Live SSE" : "Connecting..."}
-            </span>
-            <Radio className="h-3 w-3 sm:hidden" />
-          </div>
-
-          {/* Quick Demo Role Switcher Button */}
-          <div className="flex items-center bg-slate-900/90 border border-slate-800 rounded-xl p-1 shadow-inner">
-            <button
-              onClick={() => switchDemoUser("AUTHOR")}
-              disabled={isLoading || isAuthor}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
-                isAuthor
-                  ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 shadow-sm"
-                  : "text-slate-400 hover:text-slate-200"
-              }`}
-            >
-              <User className="h-3.5 w-3.5" />
-              <span>Author View</span>
-            </button>
-
-            <button
-              onClick={() => switchDemoUser("ADMIN")}
-              disabled={isLoading || !isAuthor}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
-                !isAuthor
-                  ? "bg-amber-500/20 text-amber-300 border border-amber-500/30 shadow-sm"
-                  : "text-slate-400 hover:text-slate-200"
-              }`}
-            >
-              <ShieldCheck className="h-3.5 w-3.5" />
-              <span>Admin Queue</span>
-            </button>
-          </div>
-
-          {/* Current User Badge */}
-          {user && (
-            <div className="hidden md:flex items-center gap-2 pl-2 border-l border-slate-800">
-              <div className="text-right">
-                <p className="text-xs font-medium text-slate-200 leading-tight">
-                  {user.name}
-                </p>
-                <p className="text-[10px] text-slate-400 font-mono">
-                  {user.role === "AUTHOR" ? user.authorCode || "Author" : "Staff Admin"}
-                </p>
+          {user ? (
+            <>
+              {/* Live SSE Stream Status Indicator */}
+              <div
+                className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border transition-colors ${
+                  sseConnected
+                    ? "bg-emerald-950/40 border-emerald-800/50 text-emerald-400"
+                    : "bg-slate-900 border-slate-800 text-slate-400"
+                }`}
+                title={sseConnected ? "Real-time updates active" : "Connecting to event stream..."}
+              >
+                <span
+                  className={`h-2 w-2 rounded-full ${
+                    sseConnected ? "bg-emerald-400 animate-pulse" : "bg-slate-500"
+                  }`}
+                />
+                <span className="hidden sm:inline">
+                  {sseConnected ? "Live SSE" : "Connecting..."}
+                </span>
+                <Radio className="h-3 w-3 sm:hidden" />
               </div>
+
+              {/* Quick Demo Role Switcher Button */}
+              <div className="flex items-center bg-slate-900/90 border border-slate-800 rounded-xl p-1 shadow-inner">
+                <button
+                  type="button"
+                  onClick={() => switchDemoUser("AUTHOR")}
+                  disabled={isLoading || isAuthor}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                    isAuthor
+                      ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 shadow-sm"
+                      : "text-slate-400 hover:text-slate-200"
+                  }`}
+                >
+                  <User className="h-3.5 w-3.5" />
+                  <span>Author View</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => switchDemoUser("ADMIN")}
+                  disabled={isLoading || !isAuthor}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                    !isAuthor
+                      ? "bg-amber-500/20 text-amber-300 border border-amber-500/30 shadow-sm"
+                      : "text-slate-400 hover:text-slate-200"
+                  }`}
+                >
+                  <ShieldCheck className="h-3.5 w-3.5" />
+                  <span>Admin Queue</span>
+                </button>
+              </div>
+
+              {/* Current User Badge & Sign Out Button */}
+              <div className="flex items-center gap-3 pl-2 border-l border-slate-800">
+                <div className="hidden md:block text-right">
+                  <p className="text-xs font-medium text-slate-200 leading-tight">
+                    {user.name}
+                  </p>
+                  <p className="text-[10px] text-slate-400 font-mono">
+                    {user.role === "AUTHOR" ? user.authorCode || "Author" : "Staff Admin"}
+                  </p>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={handleLogout}
+                  className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-semibold bg-slate-900 hover:bg-rose-950/40 text-slate-400 hover:text-rose-300 border border-slate-800 hover:border-rose-800/60 transition-all"
+                  title="Sign out of your session"
+                >
+                  <LogOut className="h-3.5 w-3.5" />
+                  <span className="hidden sm:inline">Sign Out</span>
+                </button>
+              </div>
+            </>
+          ) : (
+            <div className="text-xs text-slate-400 font-medium">
+              Secure Author Authentication
             </div>
           )}
         </div>
