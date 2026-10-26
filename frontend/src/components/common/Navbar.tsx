@@ -1,8 +1,17 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import Link from "next/link";
+import { useRouter, usePathname } from "next/navigation";
 import { useAuth } from "../../context/AuthContext";
-import { BookOpen, ShieldCheck, User, Radio, LogOut } from "lucide-react";
+import {
+  BookOpen,
+  ShieldCheck,
+  User,
+  Radio,
+  LogOut,
+  LayoutDashboard,
+  MessageSquare,
+} from "lucide-react";
 
 interface NavbarProps {
   sseConnected?: boolean;
@@ -11,6 +20,7 @@ interface NavbarProps {
 export const Navbar: React.FC<NavbarProps> = ({ sseConnected = false }) => {
   const { user, switchDemoUser, logout, isLoading } = useAuth();
   const router = useRouter();
+  const pathname = usePathname();
 
   const isAuthor = user?.role === "AUTHOR";
 
@@ -23,15 +33,15 @@ export const Navbar: React.FC<NavbarProps> = ({ sseConnected = false }) => {
     <header className="sticky top-0 z-40 w-full border-b border-slate-800/80 bg-[#0b0f19]/80 backdrop-blur-xl">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
         {/* Brand Logo & Name */}
-        <div className="flex items-center gap-3">
-          <div className="h-10 w-10 rounded-xl bg-gradient-to-tr from-emerald-500 to-teal-400 p-[1px] shadow-lg shadow-emerald-500/10">
+        <Link href="/" className="flex items-center gap-3 group">
+          <div className="h-10 w-10 rounded-xl bg-gradient-to-tr from-emerald-500 to-teal-400 p-[1px] shadow-lg shadow-emerald-500/10 group-hover:scale-105 transition-transform">
             <div className="h-full w-full rounded-xl bg-slate-950 flex items-center justify-center">
               <BookOpen className="h-5 w-5 text-emerald-400" />
             </div>
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <span className="font-heading font-bold text-lg tracking-tight text-white">
+              <span className="font-heading font-bold text-lg tracking-tight text-white group-hover:text-emerald-300 transition-colors">
                 BookLeaf
               </span>
               <span className="text-xs px-2 py-0.5 rounded-full bg-slate-800 text-slate-300 border border-slate-700/60 font-medium">
@@ -42,7 +52,48 @@ export const Navbar: React.FC<NavbarProps> = ({ sseConnected = false }) => {
               Author Support & Operations Desk
             </p>
           </div>
-        </div>
+        </Link>
+
+        {/* Center Navigation Links for Authors */}
+        {user && isAuthor && (
+          <nav className="hidden md:flex items-center gap-1 bg-slate-900/60 border border-slate-800/80 p-1 rounded-2xl text-xs font-semibold">
+            <Link
+              href="/"
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl transition-all ${
+                pathname === "/"
+                  ? "bg-slate-800 text-white shadow-sm"
+                  : "text-slate-400 hover:text-slate-200"
+              }`}
+            >
+              <LayoutDashboard className="h-3.5 w-3.5" />
+              <span>Overview</span>
+            </Link>
+
+            <Link
+              href="/books"
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl transition-all ${
+                pathname.startsWith("/books")
+                  ? "bg-teal-500/20 text-teal-300 border border-teal-500/30 shadow-sm"
+                  : "text-slate-400 hover:text-slate-200"
+              }`}
+            >
+              <BookOpen className="h-3.5 w-3.5" />
+              <span>My Books</span>
+            </Link>
+
+            <Link
+              href="/tickets"
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl transition-all ${
+                pathname.startsWith("/tickets")
+                  ? "bg-teal-500/20 text-teal-300 border border-teal-500/30 shadow-sm"
+                  : "text-slate-400 hover:text-slate-200"
+              }`}
+            >
+              <MessageSquare className="h-3.5 w-3.5" />
+              <span>My Tickets</span>
+            </Link>
+          </nav>
+        )}
 
         {/* Center / Right controls */}
         <div className="flex items-center gap-3 sm:gap-4">
@@ -72,7 +123,10 @@ export const Navbar: React.FC<NavbarProps> = ({ sseConnected = false }) => {
               <div className="flex items-center bg-slate-900/90 border border-slate-800 rounded-xl p-1 shadow-inner">
                 <button
                   type="button"
-                  onClick={() => switchDemoUser("AUTHOR")}
+                  onClick={() => {
+                    switchDemoUser("AUTHOR");
+                    router.push("/");
+                  }}
                   disabled={isLoading || isAuthor}
                   className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
                     isAuthor
@@ -86,7 +140,10 @@ export const Navbar: React.FC<NavbarProps> = ({ sseConnected = false }) => {
 
                 <button
                   type="button"
-                  onClick={() => switchDemoUser("ADMIN")}
+                  onClick={() => {
+                    switchDemoUser("ADMIN");
+                    router.push("/");
+                  }}
                   disabled={isLoading || !isAuthor}
                   className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
                     !isAuthor

@@ -1,6 +1,8 @@
 "use client";
 
 import React, { useEffect, useState, useCallback } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useAuth } from "../../context/AuthContext";
 import { api } from "../../lib/api";
 import type { Book, BookSummary, Ticket } from "../../types/index";
@@ -23,6 +25,8 @@ import {
   FileText,
   Clock,
   MessageSquare,
+  ArrowRight,
+  ExternalLink,
 } from "lucide-react";
 
 interface AuthorDashboardProps {
@@ -31,6 +35,7 @@ interface AuthorDashboardProps {
 
 export const AuthorDashboard: React.FC<AuthorDashboardProps> = ({ lastSSEEvent }) => {
   const { user } = useAuth();
+  const router = useRouter();
   const [books, setBooks] = useState<Book[]>([]);
   const [summary, setSummary] = useState<BookSummary | null>(null);
   const [isLoadingBooks, setIsLoadingBooks] = useState<boolean>(true);
@@ -343,7 +348,7 @@ export const AuthorDashboard: React.FC<AuthorDashboardProps> = ({ lastSSEEvent }
             <AuthorTicketList
               tickets={tickets}
               isLoading={isLoadingTickets}
-              onSelectTicket={(t) => setSelectedTicket(t)}
+              onSelectTicket={(t) => router.push(`/tickets/${t.id}`)}
               onOpenCreateModal={() => handleOpenTicketModal()}
             />
           )}
