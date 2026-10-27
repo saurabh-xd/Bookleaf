@@ -227,16 +227,15 @@ const heuristicDraftResponse = (ctx: DraftContext, _retrievedChunks: RetrievedCh
 
 /**
  * Type-Safe AI Triage using Vercel AI SDK generateObject
- * Auto-classifies category and scores priority using minimal token context
+ * Tries Gemini 3.1 Flash-Lite -> 2.5 Flash before falling back to heuristics
  */
 export const triageTicket = async (subject: string, description: string): Promise<TriageResult> => {
   if (config.ai.geminiApiKey) {
-    try {
-      const google = createGoogleGenerativeAI({
-        apiKey: config.ai.geminiApiKey,
-      });
+    const google = createGoogleGenerativeAI({
+      apiKey: config.ai.geminiApiKey,
+    });
 
-      const prompt = `You are the lead triage AI for BookLeaf Publishing author support.
+    const prompt = `You are the lead triage AI for BookLeaf Publishing author support.
 Classify the ticket into EXACTLY one category and determine its priority score.
 
 Categories:
@@ -256,21 +255,30 @@ Priority Guidelines:
 Ticket Subject: "${subject}"
 Ticket Description: "${description}"`;
 
-      const result = await generateObject({
-        model: google("gemini-3.5-flash"),
-        schema: triageSchema,
-        prompt,
-      });
+    const candidateModels = [
+      "gemini-3.1-flash-lite",
+      "gemini-2.5-flash",
+    ];
 
-      return {
-        category: result.object.category,
-        priority: result.object.priority,
-        confidenceScore: result.object.confidenceScore,
-        reasoning: result.object.reasoning,
-        source: "AI_MODEL",
-      };
-    } catch (err) {
-      console.warn("Vercel AI SDK Gemini Triage failed, falling back to heuristics:", err);
+    for (const modelName of candidateModels) {
+      try {
+        const result = await generateObject({
+          model: google(modelName),
+          schema: triageSchema,
+          prompt,
+          abortSignal: AbortSignal.timeout(10000),
+        });
+
+        return {
+          category: result.object.category,
+          priority: result.object.priority,
+          confidenceScore: result.object.confidenceScore,
+          reasoning: result.object.reasoning,
+          source: "AI_MODEL",
+        };
+      } catch (err) {
+        // Silently proceed to next model in candidate chain
+      }
     }
   }
 
@@ -280,7 +288,7 @@ Ticket Description: "${description}"`;
 
 /**
  * True Vector RAG with Vercel AI SDK generateText
- * Retrieves nearest pgvector chunks and generates grounded, empathetic draft
+ * Uses gemini-3.1-flash-lite for grounded, empathetic draft generation
  */
 export const generateDraftResponse = async (ctx: DraftContext): Promise<string> => {
   // 1. Vector Search: Retrieve top-2 semantically closest knowledge chunks from PostgreSQL pgvector
@@ -289,21 +297,20 @@ export const generateDraftResponse = async (ctx: DraftContext): Promise<string> 
   const knowledgeContext =
     retrievedChunks.length > 0
       ? retrievedChunks
-          .map((chunk, i) => `[Policy Chunk ${i + 1} (${chunk.title}) - Similarity: ${chunk.similarity}]:\n${chunk.content}`)
-          .join("\n\n")
+        .map((chunk, i) => `[Policy Chunk ${i + 1} (${chunk.title}) - Similarity: ${chunk.similarity}]:\n${chunk.content}`)
+        .join("\n\n")
       : BOOKLEAF_KB[ctx.category]?.rules.join("\n") || "";
 
   if (config.ai.geminiApiKey) {
-    try {
-      const google = createGoogleGenerativeAI({
-        apiKey: config.ai.geminiApiKey,
-      });
+    const google = createGoogleGenerativeAI({
+      apiKey: config.ai.geminiApiKey,
+    });
 
-      const systemPrompt = `You are a professional, empathetic author support representative at BookLeaf Publishing.
+    const systemPrompt = `You are a professional, empathetic author support representative at BookLeaf Publishing.
 Follow BookLeaf policies strictly:
 ${BOOKLEAF_COMMUNICATION_GUIDELINES}`;
 
-      const userPrompt = `Author Name: ${ctx.authorName}
+    const userPrompt = `Author Name: ${ctx.authorName}
 Associated Book: ${ctx.bookTitle || "General Account"}
 Book Status: ${ctx.bookStatus || "N/A"}
 Sales Copies: ${ctx.copiesSold ?? "N/A"}
@@ -323,17 +330,26 @@ Rules:
 4. Do not make up facts outside the provided context.
 5. End with a clear next step and sign off as "BookLeaf Author Support Team".`;
 
-      const { text } = await generateText({
-        model: google("gemini-3.5-flash"),
-        system: systemPrompt,
-        prompt: userPrompt,
-      });
+    const candidateModels = [
+      "gemini-3.1-flash-lite",
+      "gemini-2.5-flash",
+    ];
 
-      if (text && text.trim()) {
-        return text.trim();
+    for (const modelName of candidateModels) {
+      try {
+        const { text } = await generateText({
+          model: google(modelName),
+          system: systemPrompt,
+          prompt: userPrompt,
+          abortSignal: AbortSignal.timeout(15000),
+        });
+
+        if (text && text.trim()) {
+          return text.trim();
+        }
+      } catch (err) {
+        // Silently proceed to next model in candidate chain
       }
-    } catch (err) {
-      console.warn("Vercel AI SDK Gemini Draft generation failed, falling back to heuristics:", err);
     }
   }
 

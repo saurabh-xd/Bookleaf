@@ -21,6 +21,7 @@ app.use(
       return callback(null, true);
     },
     credentials: true,
+    maxAge: 86400, // Cache preflight OPTIONS requests for 24 hours
   })
 );
 

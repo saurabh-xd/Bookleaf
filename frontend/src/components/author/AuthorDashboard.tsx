@@ -96,8 +96,17 @@ export const AuthorDashboard: React.FC<AuthorDashboardProps> = ({ lastSSEEvent }
 
   useEffect(() => {
     if (!lastSSEEvent) return;
-    const { event } = lastSSEEvent;
-    if (event === "TICKET_CREATED" || event === "TICKET_UPDATED" || event === "NEW_MESSAGE") {
+    const { event, data } = lastSSEEvent;
+    if (event === "TICKET_CREATED") {
+      const ticketId = data?.id || data?.ticket?.id;
+      setTickets((prev) => {
+        if (ticketId && prev.some((t) => t.id === ticketId)) {
+          return prev;
+        }
+        loadTickets();
+        return prev;
+      });
+    } else if (event === "TICKET_UPDATED" || event === "NEW_MESSAGE") {
       loadTickets();
     }
   }, [lastSSEEvent, loadTickets]);

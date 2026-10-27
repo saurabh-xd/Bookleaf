@@ -43,24 +43,10 @@ export const createTicket = async (req: Request, res: Response, next: NextFuncti
     const count = await prisma.ticket.count();
     const ticketNumber = `BL-${1000 + count + 1}`;
 
-    // 1. AI Auto-Classification & Dynamic Priority Scoring (minimal token context)
+    // 1. AI Auto-Classification & Dynamic Priority Scoring (Fast triage)
     const triage = await triageTicket(subject, description);
 
-    // 2. Category-Routed RAG Draft Generation (grounded in BookLeaf KB + live author stats)
-    const aiDraft = await generateDraftResponse({
-      authorName: user.name,
-      bookTitle: book?.title,
-      bookStatus: book?.status,
-      mrp: book?.mrp,
-      copiesSold: book?.totalCopiesSold,
-      royaltyPending: book?.royaltyPending,
-      lastPayoutDate: book?.lastRoyaltyPayoutDate?.toISOString(),
-      subject: subject.trim(),
-      description: description.trim(),
-      category: triage.category,
-    });
-
-    // 3. Persist Ticket in Database
+    // 2. Persist Ticket in Database immediately
     const ticket = await prisma.ticket.create({
       data: {
         ticketNumber,
@@ -73,7 +59,7 @@ export const createTicket = async (req: Request, res: Response, next: NextFuncti
         priority: triage.priority,
         aiPriority: triage.priority,
         status: "OPEN",
-        aiDraftResponse: aiDraft,
+        aiDraftResponse: null,
         aiConfidenceScore: triage.confidenceScore,
         aiProcessingStatus: triage.source === "AI_MODEL" ? "SUCCESS" : "FALLBACK",
         fileAttachmentName: fileAttachmentName || null,
@@ -89,7 +75,7 @@ export const createTicket = async (req: Request, res: Response, next: NextFuncti
       },
     });
 
-    // 4. Create initial message in thread from author
+    // 3. Create initial message in thread from author
     await prisma.ticketMessage.create({
       data: {
         ticketId: ticket.id,
@@ -99,16 +85,58 @@ export const createTicket = async (req: Request, res: Response, next: NextFuncti
       },
     });
 
-    // 5. Broadcast real-time SSE notification (Admin triage queue & Author ticket list)
+    // 4. Broadcast real-time SSE notification (Admin triage queue & Author ticket list)
     broadcastTicketEvent(user.id, "TICKET_CREATED", {
       ticket,
     });
 
-    return res.status(201).json({
+    // 5. Respond immediately to author so submission is fast and responsive
+    res.status(201).json({
       success: true,
       message: "Ticket created successfully",
       data: ticket,
     });
+
+    // 6. Generate Category-Routed RAG Draft in the background for Admins
+    (async () => {
+      try {
+        const aiDraft = await generateDraftResponse({
+          authorName: user.name,
+          bookTitle: book?.title,
+          bookStatus: book?.status,
+          mrp: book?.mrp,
+          copiesSold: book?.totalCopiesSold,
+          royaltyPending: book?.royaltyPending,
+          lastPayoutDate: book?.lastRoyaltyPayoutDate?.toISOString(),
+          subject: subject.trim(),
+          description: description.trim(),
+          category: triage.category,
+        });
+
+        if (aiDraft) {
+          const updatedTicket = await prisma.ticket.update({
+            where: { id: ticket.id },
+            data: { aiDraftResponse: aiDraft },
+            include: {
+              author: {
+                select: { id: true, authorCode: true, name: true, email: true },
+              },
+              book: {
+                select: { id: true, bookCode: true, title: true, isbn: true, status: true },
+              },
+            },
+          });
+
+          // Notify admins in real-time that AI draft is populated
+          broadcastToAdmins("TICKET_UPDATED", {
+            ticket: updatedTicket,
+          });
+        }
+      } catch (err) {
+        console.error("Background AI draft generation failed:", err);
+      }
+    })();
+    return;
   } catch (error) {
     next(error);
   }

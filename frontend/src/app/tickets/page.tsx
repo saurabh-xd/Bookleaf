@@ -69,13 +69,33 @@ export default function MyTicketsPage() {
     }
   }, [user, loadData]);
 
+  const refreshTicketsOnly = useCallback(async () => {
+    try {
+      const res = await api.tickets.list();
+      if (res.success && res.data) {
+        setTickets(res.data);
+      }
+    } catch (err) {
+      console.error("Failed to refresh tickets:", err);
+    }
+  }, []);
+
   useEffect(() => {
     if (!lastEvent) return;
-    const { event } = lastEvent;
-    if (event === "TICKET_CREATED" || event === "TICKET_UPDATED" || event === "NEW_MESSAGE") {
-      loadData(true);
+    const { event, data } = lastEvent;
+    if (event === "TICKET_CREATED") {
+      const ticketId = data?.id || data?.ticket?.id;
+      setTickets((prev) => {
+        if (ticketId && prev.some((t) => t.id === ticketId)) {
+          return prev;
+        }
+        refreshTicketsOnly();
+        return prev;
+      });
+    } else if (event === "TICKET_UPDATED" || event === "NEW_MESSAGE") {
+      refreshTicketsOnly();
     }
-  }, [lastEvent, loadData]);
+  }, [lastEvent, refreshTicketsOnly]);
 
   const handleSelectTicket = (ticket: Ticket) => {
     router.push(`/tickets/${ticket.id}`);
@@ -83,6 +103,7 @@ export default function MyTicketsPage() {
 
   const handleTicketCreated = (newTicket: Ticket) => {
     setIsModalOpen(false);
+    setTickets((prev) => [newTicket, ...prev.filter((t) => t.id !== newTicket.id)]);
     router.push(`/tickets/${newTicket.id}`);
   };
 
