@@ -30,6 +30,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         localStorage.setItem("bookleaf_user", JSON.stringify(res.data.user));
         setToken(res.data.token);
         setUser(res.data.user);
+      } else {
+        throw new Error((res as any)?.message || "Invalid email or password");
       }
     } finally {
       setIsLoading(false);
