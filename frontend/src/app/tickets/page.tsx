@@ -144,7 +144,7 @@ export default function MyTicketsPage() {
               type="button"
               onClick={() => loadData(true)}
               disabled={isRefreshing || isLoading}
-              className="p-2 text-xs rounded-full border border-border bg-card hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
+              className="p-2 text-xs rounded-full border border-border bg-card hover:bg-muted text-muted-foreground hover:text-foreground transition-colors cursor-pointer disabled:cursor-not-allowed"
               title="Refresh"
             >
               <RefreshCw className={`h-3.5 w-3.5 ${isRefreshing ? "animate-spin" : ""}`} />
@@ -167,7 +167,7 @@ export default function MyTicketsPage() {
             <button
               type="button"
               onClick={() => loadData()}
-              className="font-medium underline"
+              className="font-medium underline cursor-pointer"
             >
               Retry
             </button>

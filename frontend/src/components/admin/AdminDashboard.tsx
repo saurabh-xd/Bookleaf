@@ -205,14 +205,14 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                 if (target) setSelectedTicket(target);
                 setIncomingAlert(null);
               }}
-              className="text-xs underline font-medium text-foreground"
+              className="text-xs underline font-medium text-foreground cursor-pointer"
             >
               Open
             </button>
             <button
               type="button"
               onClick={() => setIncomingAlert(null)}
-              className="text-muted-foreground hover:text-foreground"
+              className="text-muted-foreground hover:text-foreground cursor-pointer"
             >
               <X className="h-3.5 w-3.5" />
             </button>

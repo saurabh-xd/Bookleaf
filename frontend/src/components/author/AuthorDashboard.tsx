@@ -155,7 +155,7 @@ export const AuthorDashboard: React.FC<AuthorDashboardProps> = ({ lastSSEEvent }
               loadTickets();
             }}
             disabled={isRefreshing || isLoadingBooks}
-            className="p-2 text-xs rounded-full border border-border bg-card hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
+            className="p-2 text-xs rounded-full border border-border bg-card hover:bg-muted text-muted-foreground hover:text-foreground transition-colors cursor-pointer disabled:cursor-not-allowed"
             title="Refresh"
           >
             <RefreshCw className={`h-3.5 w-3.5 ${isRefreshing ? "animate-spin" : ""}`} />
@@ -178,7 +178,7 @@ export const AuthorDashboard: React.FC<AuthorDashboardProps> = ({ lastSSEEvent }
           <button
             type="button"
             onClick={() => loadBooksData()}
-            className="font-medium underline"
+            className="font-medium underline cursor-pointer"
           >
             Retry
           </button>
@@ -196,7 +196,7 @@ export const AuthorDashboard: React.FC<AuthorDashboardProps> = ({ lastSSEEvent }
             setActiveTab("catalog");
             setSelectedTicket(null);
           }}
-          className={`px-4 py-1.5 rounded-full text-xs font-medium transition-all ${
+          className={`px-4 py-1.5 rounded-full text-xs font-medium transition-all cursor-pointer ${
             activeTab === "catalog"
               ? "bg-secondary text-secondary-foreground shadow-2xs"
               : "text-muted-foreground hover:text-foreground hover:bg-muted/60"
@@ -208,7 +208,7 @@ export const AuthorDashboard: React.FC<AuthorDashboardProps> = ({ lastSSEEvent }
         <button
           type="button"
           onClick={() => setActiveTab("tickets")}
-          className={`px-4 py-1.5 rounded-full text-xs font-medium transition-all ${
+          className={`px-4 py-1.5 rounded-full text-xs font-medium transition-all cursor-pointer ${
             activeTab === "tickets"
               ? "bg-secondary text-secondary-foreground shadow-2xs"
               : "text-muted-foreground hover:text-foreground hover:bg-muted/60"

@@ -92,7 +92,7 @@ export const AuthorTicketDetail: React.FC<AuthorTicketDetailProps> = ({
         <button
           type="button"
           onClick={onBack}
-          className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground font-medium px-2.5 py-1 rounded-full hover:bg-muted/60 transition-colors"
+          className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground font-medium px-2.5 py-1 rounded-full hover:bg-muted/60 transition-colors cursor-pointer"
         >
           <ArrowLeft className="h-3.5 w-3.5" />
           <span>Back to Tickets</span>
@@ -225,7 +225,7 @@ export const AuthorTicketDetail: React.FC<AuthorTicketDetailProps> = ({
             <button
               type="submit"
               disabled={isSending || !newMessage.trim()}
-              className="h-8 w-8 rounded-full bg-emerald-600 hover:bg-emerald-500 disabled:opacity-40 text-white flex items-center justify-center transition-all flex-shrink-0 shadow-xs"
+              className="h-8 w-8 rounded-full bg-emerald-600 hover:bg-emerald-500 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer text-white flex items-center justify-center transition-all flex-shrink-0 shadow-xs"
               title="Send Message"
             >
               <Send className="h-3.5 w-3.5" />

@@ -139,7 +139,7 @@ export default function MyBooksPage() {
               type="button"
               onClick={() => loadBooksData(true)}
               disabled={isRefreshing || isLoading}
-              className="p-2 text-xs rounded-full border border-border bg-card hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
+              className="p-2 text-xs rounded-full border border-border bg-card hover:bg-muted text-muted-foreground hover:text-foreground transition-colors cursor-pointer disabled:cursor-not-allowed"
               title="Refresh"
             >
               <RefreshCw className={`h-3.5 w-3.5 ${isRefreshing ? "animate-spin" : ""}`} />
@@ -162,7 +162,7 @@ export default function MyBooksPage() {
             <button
               type="button"
               onClick={() => loadBooksData()}
-              className="font-medium underline"
+              className="font-medium underline cursor-pointer"
             >
               Retry
             </button>
@@ -177,7 +177,20 @@ export default function MyBooksPage() {
           {isLoading ? (
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 animate-pulse">
               {[1, 2].map((i) => (
-                <div key={i} className="h-44 rounded-lg bg-muted border border-border" />
+                <div key={i} className="h-64 rounded-2xl bg-card border border-border p-4 flex gap-4">
+                  <div className="w-24 h-32 rounded-lg bg-muted flex-shrink-0" />
+                  <div className="flex-1 space-y-3">
+                    <div className="h-4 bg-muted rounded w-3/4" />
+                    <div className="h-3 bg-muted rounded w-1/2" />
+                    <div className="h-6 bg-muted rounded w-1/3" />
+                    <div className="grid grid-cols-4 gap-2 pt-4">
+                      <div className="h-12 bg-muted rounded-xl" />
+                      <div className="h-12 bg-muted rounded-xl" />
+                      <div className="h-12 bg-muted rounded-xl" />
+                      <div className="h-12 bg-muted rounded-xl" />
+                    </div>
+                  </div>
+                </div>
               ))}
             </div>
           ) : (

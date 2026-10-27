@@ -104,7 +104,7 @@ export const RaiseTicketModal: React.FC<RaiseTicketModalProps> = ({
             type="button"
             onClick={onClose}
             disabled={isSubmitting}
-            className="p-1 rounded text-muted-foreground hover:text-foreground"
+            className="p-1 rounded text-muted-foreground hover:text-foreground cursor-pointer"
           >
             <X className="h-4 w-4" />
           </button>
@@ -126,7 +126,7 @@ export const RaiseTicketModal: React.FC<RaiseTicketModalProps> = ({
               value={selectedBookId}
               onChange={(e) => setSelectedBookId(e.target.value)}
               disabled={isSubmitting}
-              className="w-full text-xs rounded-md bg-card border border-border px-3 py-2 text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+              className="w-full text-xs rounded-md bg-card border border-border px-3 py-2 text-foreground focus:outline-none focus:ring-1 focus:ring-ring cursor-pointer"
             >
               <option value="">General / Account Level</option>
               {books.map((b) => (
@@ -148,7 +148,7 @@ export const RaiseTicketModal: React.FC<RaiseTicketModalProps> = ({
                   key={topic}
                   type="button"
                   onClick={() => setSubject(topic)}
-                  className="text-xs px-2.5 py-1 rounded-full bg-secondary/50 hover:bg-secondary text-secondary-foreground font-medium transition-colors shadow-2xs"
+                  className="text-xs px-2.5 py-1 rounded-full bg-secondary/50 hover:bg-secondary text-secondary-foreground font-medium transition-colors shadow-2xs cursor-pointer"
                 >
                   {topic}
                 </button>
@@ -219,7 +219,7 @@ export const RaiseTicketModal: React.FC<RaiseTicketModalProps> = ({
               type="button"
               onClick={onClose}
               disabled={isSubmitting}
-              className="px-3.5 py-1.5 rounded-full text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors"
+              className="px-3.5 py-1.5 rounded-full text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors cursor-pointer"
             >
               Cancel
             </button>

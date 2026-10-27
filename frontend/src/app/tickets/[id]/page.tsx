@@ -74,7 +74,7 @@ function TicketDetailContent() {
             <button
               type="button"
               onClick={() => router.push("/tickets")}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs border border-border hover:bg-muted"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs border border-border hover:bg-muted cursor-pointer"
             >
               <ArrowLeft className="h-3.5 w-3.5" />
               <span>Back to Tickets</span>
