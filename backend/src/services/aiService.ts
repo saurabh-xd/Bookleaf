@@ -150,6 +150,26 @@ const heuristicTriage = (subject: string, description: string): TriageResult => 
 };
 
 /**
+ * Strips raw markdown stars/asterisks (* and **) from AI-generated text,
+ * ensuring clean, human-like plain conversational replies without asterisks.
+ */
+export const stripMarkdownStars = (text: string): string => {
+  if (!text) return "";
+  return text
+    // Replace **bold** with plain text
+    .replace(/\*\*(.*?)\*\*/g, "$1")
+    // Replace *italic* with plain text
+    .replace(/\*([^\*\n]+)\*/g, "$1")
+    // Replace list bullets with stars "* " to clean bullet "• "
+    .replace(/^(\s*)\*\s+/gm, "$1• ")
+    // Clean any residual triple or double stars
+    .replace(/\*{2,}/g, "")
+    // Clean any stray single asterisks around words
+    .replace(/(^|\s)\*([^\s\*]+)\*(\s|$)/g, "$1$2$3")
+    .trim();
+};
+
+/**
  * Heuristic response draft generator grounded in BookLeaf Knowledge Base policies
  */
 const heuristicDraftResponse = (ctx: DraftContext, _retrievedChunks: RetrievedChunk[] = []): string => {
@@ -328,7 +348,8 @@ Rules:
 2. Acknowledge their concern with sincere empathy before giving solutions.
 3. Be specific: include actual numbers, dates, policies, or resolution timelines (e.g. 48 hours for escalation, 5-7 business days for reprints, 24-48 hours for stock sync).
 4. Do not make up facts outside the provided context.
-5. End with a clear next step and sign off as "BookLeaf Author Support Team".`;
+5. End with a clear next step and sign off as "BookLeaf Author Support Team".
+6. Write in clean, plain conversational text only. DO NOT use markdown asterisks (* or **), bolding stars, italics, or markdown headings. Write clear, natural paragraphs as in a professional email or chat message.`;
 
     const candidateModels = [
       "gemini-3.1-flash-lite",
@@ -345,7 +366,7 @@ Rules:
         });
 
         if (text && text.trim()) {
-          return text.trim();
+          return stripMarkdownStars(text);
         }
       } catch (err) {
         // Silently proceed to next model in candidate chain

@@ -5,6 +5,7 @@ import type { Ticket, TicketMessage } from "../../types/index";
 import { api } from "../../lib/api";
 import { useAuth } from "../../context/AuthContext";
 import { ArrowLeft, Send, CheckCheck } from "lucide-react";
+import { FormattedMessage } from "../../lib/formatMessage";
 
 interface AuthorTicketDetailProps {
   ticket: Ticket;
@@ -171,7 +172,9 @@ export const AuthorTicketDetail: React.FC<AuthorTicketDetailProps> = ({
                 {isMe ? (
                   /* WhatsApp Outgoing Bubble (Right side, soft green, tail top-right) */
                   <div className="max-w-[82%] sm:max-w-[70%] rounded-2xl rounded-tr-xs bg-[#d9fdd3] dark:bg-[#005c4b] text-[#111b21] dark:text-[#e9edef] px-3.5 py-2 shadow-xs text-xs sm:text-[13px] leading-relaxed relative">
-                    <p className="whitespace-pre-wrap break-words">{msg.message}</p>
+                    <p className="whitespace-pre-wrap break-words">
+                      <FormattedMessage content={msg.message} />
+                    </p>
                     <div className="flex items-center justify-end gap-1 mt-1 text-[10px] text-neutral-500 dark:text-neutral-300 select-none">
                       <span>{timeStr}</span>
                       <CheckCheck className="h-3 w-3 text-emerald-600 dark:text-emerald-300" />
@@ -183,7 +186,9 @@ export const AuthorTicketDetail: React.FC<AuthorTicketDetailProps> = ({
                     <span className="block text-[11px] font-bold text-teal-700 dark:text-teal-400 mb-0.5">
                       {msg.sender?.name || "BookLeaf Operations Support"}
                     </span>
-                    <p className="whitespace-pre-wrap break-words">{msg.message}</p>
+                    <p className="whitespace-pre-wrap break-words">
+                      <FormattedMessage content={msg.message} />
+                    </p>
                     <div className="flex items-center justify-end mt-1 text-[10px] text-muted-foreground select-none">
                       <span>{timeStr}</span>
                     </div>

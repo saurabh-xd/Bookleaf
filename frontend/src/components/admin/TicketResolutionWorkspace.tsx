@@ -12,6 +12,7 @@ import { api } from "../../lib/api";
 import { SLAIndicator } from "./SLAIndicator";
 import { useAuth } from "../../context/AuthContext";
 import { ArrowLeft, Send, RefreshCw, Lock, CheckCheck } from "lucide-react";
+import { FormattedMessage, stripStars } from "../../lib/formatMessage";
 
 interface TicketResolutionWorkspaceProps {
   ticket: Ticket;
@@ -177,7 +178,7 @@ export const TicketResolutionWorkspace: React.FC<TicketResolutionWorkspaceProps>
   const handleInsertDraft = () => {
     if (ticket.aiDraftResponse) {
       setComposerMode("PUBLIC");
-      setComposerText(ticket.aiDraftResponse);
+      setComposerText(stripStars(ticket.aiDraftResponse));
       setDraftCopied(true);
       setTimeout(() => setDraftCopied(false), 2000);
     }
@@ -376,7 +377,9 @@ export const TicketResolutionWorkspace: React.FC<TicketResolutionWorkspaceProps>
                         </span>
                         <span>{timeStr}</span>
                       </div>
-                      <p className="whitespace-pre-wrap break-words">{msg.message}</p>
+                      <p className="whitespace-pre-wrap break-words">
+                        <FormattedMessage content={msg.message} />
+                      </p>
                     </div>
                   );
                 }
@@ -400,7 +403,9 @@ export const TicketResolutionWorkspace: React.FC<TicketResolutionWorkspaceProps>
                     {isMe ? (
                       /* WhatsApp Outgoing Bubble (Right side, soft green) */
                       <div className="max-w-[82%] sm:max-w-[70%] rounded-2xl rounded-tr-xs bg-[#d9fdd3] dark:bg-[#005c4b] text-[#111b21] dark:text-[#e9edef] px-3.5 py-2 shadow-xs text-xs sm:text-[13px] leading-relaxed relative">
-                        <p className="whitespace-pre-wrap break-words">{msg.message}</p>
+                        <p className="whitespace-pre-wrap break-words">
+                          <FormattedMessage content={msg.message} />
+                        </p>
                         <div className="flex items-center justify-end gap-1 mt-1 text-[10px] text-neutral-500 dark:text-neutral-300 select-none">
                           <span>{timeStr}</span>
                           <CheckCheck className="h-3 w-3 text-emerald-600 dark:text-emerald-300" />
@@ -412,7 +417,9 @@ export const TicketResolutionWorkspace: React.FC<TicketResolutionWorkspaceProps>
                         <span className="block text-[11px] font-bold text-teal-700 dark:text-teal-400 mb-0.5">
                           {msg.sender?.name || ticket.author.name} (Author)
                         </span>
-                        <p className="whitespace-pre-wrap break-words">{msg.message}</p>
+                        <p className="whitespace-pre-wrap break-words">
+                          <FormattedMessage content={msg.message} />
+                        </p>
                         <div className="flex items-center justify-end mt-1 text-[10px] text-muted-foreground select-none">
                           <span>{timeStr}</span>
                         </div>
@@ -524,7 +531,9 @@ export const TicketResolutionWorkspace: React.FC<TicketResolutionWorkspaceProps>
             </div>
 
             <div className="bg-muted/50 rounded-md p-3 border border-border text-xs text-foreground leading-relaxed max-h-72 overflow-y-auto whitespace-pre-wrap">
-              {ticket.aiDraftResponse || (
+              {ticket.aiDraftResponse ? (
+                <FormattedMessage content={stripStars(ticket.aiDraftResponse)} />
+              ) : (
                 <span className="text-muted-foreground italic">Draft unavailable</span>
               )}
             </div>
