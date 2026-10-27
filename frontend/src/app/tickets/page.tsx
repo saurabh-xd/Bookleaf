@@ -123,7 +123,7 @@ export default function MyTicketsPage() {
               type="button"
               onClick={() => loadData(true)}
               disabled={isRefreshing || isLoading}
-              className="p-2 text-xs rounded-md border border-border bg-card hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
+              className="p-2 text-xs rounded-full border border-border bg-card hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
               title="Refresh"
             >
               <RefreshCw className={`h-3.5 w-3.5 ${isRefreshing ? "animate-spin" : ""}`} />
@@ -132,7 +132,7 @@ export default function MyTicketsPage() {
             <button
               type="button"
               onClick={() => setIsModalOpen(true)}
-              className="px-3.5 py-1.5 rounded-md text-xs font-medium bg-primary text-primary-foreground hover:opacity-90 transition-opacity"
+              className="px-4 py-1.5 rounded-full text-xs font-medium bg-primary text-primary-foreground hover:bg-primary/90 shadow-2xs transition-all cursor-pointer"
             >
               New Ticket
             </button>

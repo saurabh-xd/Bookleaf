@@ -299,14 +299,14 @@ export const TicketResolutionWorkspace: React.FC<TicketResolutionWorkspaceProps>
             type="button"
             onClick={handleAssignToMe}
             disabled={isUpdatingStatus}
-            className={`px-2.5 py-1 rounded text-xs font-medium border transition-colors ${
+            className={`px-3 py-1 rounded-full text-xs font-medium transition-all cursor-pointer ${
               ticket.assignedAdminId === user?.id
-                ? "bg-primary text-primary-foreground border-primary"
-                : "bg-card text-foreground border-border hover:bg-muted"
+                ? "bg-secondary text-secondary-foreground shadow-2xs font-semibold border border-secondary"
+                : "bg-primary text-primary-foreground hover:bg-primary/90 shadow-2xs"
             }`}
           >
             {ticket.assignedAdminId === user?.id
-              ? "Assigned to You (Unassign)"
+              ? "✓ Assigned to You"
               : ticket.assignedAdmin
               ? `Assigned: ${ticket.assignedAdmin.name}`
               : "Assign to Me"}
@@ -428,13 +428,13 @@ export const TicketResolutionWorkspace: React.FC<TicketResolutionWorkspaceProps>
           {/* WhatsApp-Style Composer */}
           <form onSubmit={handleSubmitMessage} className="bg-card border border-border rounded-xl p-3 space-y-2.5 shadow-xs">
             <div className="flex items-center justify-between text-xs border-b border-border pb-2">
-              <div className="flex items-center gap-1.5">
+              <div className="flex items-center gap-1 bg-muted/60 p-1 rounded-full border border-border/60">
                 <button
                   type="button"
                   onClick={() => setComposerMode("PUBLIC")}
-                  className={`px-2.5 py-1 rounded-md text-xs font-medium transition-colors ${
+                  className={`px-3 py-1 rounded-full text-xs font-medium transition-all ${
                     composerMode === "PUBLIC"
-                      ? "bg-muted text-foreground"
+                      ? "bg-secondary text-secondary-foreground shadow-2xs"
                       : "text-muted-foreground hover:text-foreground"
                   }`}
                 >
@@ -443,9 +443,9 @@ export const TicketResolutionWorkspace: React.FC<TicketResolutionWorkspaceProps>
                 <button
                   type="button"
                   onClick={() => setComposerMode("INTERNAL")}
-                  className={`px-2.5 py-1 rounded-md text-xs font-medium transition-colors flex items-center gap-1 ${
+                  className={`px-3 py-1 rounded-full text-xs font-medium transition-all flex items-center gap-1 ${
                     composerMode === "INTERNAL"
-                      ? "bg-amber-100 text-amber-900 dark:bg-amber-950 dark:text-amber-200"
+                      ? "bg-amber-200 text-amber-950 dark:bg-amber-900 dark:text-amber-100 shadow-2xs font-semibold"
                       : "text-muted-foreground hover:text-foreground"
                   }`}
                 >
@@ -533,9 +533,9 @@ export const TicketResolutionWorkspace: React.FC<TicketResolutionWorkspaceProps>
               <button
                 type="button"
                 onClick={handleInsertDraft}
-                className="w-full py-1.5 px-3 rounded-md text-xs font-medium border border-border bg-card hover:bg-muted text-foreground transition-colors"
+                className="w-full py-2 px-3 rounded-full text-xs font-semibold bg-secondary text-secondary-foreground hover:bg-secondary/85 shadow-2xs transition-all flex items-center justify-center gap-1.5"
               >
-                {draftCopied ? "Inserted into Composer" : "Insert into Composer"}
+                {draftCopied ? "✓ Inserted into Composer" : "Insert into Composer"}
               </button>
             )}
           </div>

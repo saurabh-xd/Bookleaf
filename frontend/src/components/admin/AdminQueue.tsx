@@ -23,8 +23,29 @@ export const AdminQueue: React.FC<AdminQueueProps> = ({
   };
 
   const getStatusBadge = (status: TicketStatus) => {
+    if (status === "OPEN") {
+      return (
+        <span className="text-[11px] font-semibold px-2.5 py-0.5 rounded-full bg-secondary text-secondary-foreground shadow-2xs">
+          OPEN
+        </span>
+      );
+    }
+    if (status === "IN_PROGRESS") {
+      return (
+        <span className="text-[11px] font-medium px-2.5 py-0.5 rounded-full bg-amber-100 dark:bg-amber-950/60 text-amber-900 dark:text-amber-200">
+          IN PROGRESS
+        </span>
+      );
+    }
+    if (status === "RESOLVED") {
+      return (
+        <span className="text-[11px] font-medium px-2.5 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950/60 text-emerald-900 dark:text-emerald-200">
+          RESOLVED
+        </span>
+      );
+    }
     return (
-      <span className="text-[11px] font-medium px-2 py-0.5 rounded bg-muted text-foreground border border-border">
+      <span className="text-[11px] font-medium px-2.5 py-0.5 rounded-full bg-muted text-muted-foreground">
         {status}
       </span>
     );
@@ -57,7 +78,7 @@ export const AdminQueue: React.FC<AdminQueueProps> = ({
           <div
             key={ticket.id}
             onClick={() => onSelectTicket(ticket)}
-            className="bg-card border border-border hover:border-foreground/30 rounded-lg p-4 transition-colors cursor-pointer"
+            className="bg-card border border-border hover:border-secondary/70 rounded-xl p-4 transition-all cursor-pointer shadow-2xs"
           >
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
               <div className="space-y-1">
@@ -97,7 +118,7 @@ export const AdminQueue: React.FC<AdminQueueProps> = ({
               </div>
 
               <div className="self-end sm:self-center">
-                <span className="text-xs font-medium text-primary hover:underline">
+                <span className="text-xs font-medium px-3.5 py-1 rounded-full bg-primary text-primary-foreground hover:bg-primary/90 shadow-2xs transition-all inline-flex items-center gap-1 cursor-pointer">
                   Resolve &rarr;
                 </span>
               </div>

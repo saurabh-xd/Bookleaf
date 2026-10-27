@@ -92,7 +92,7 @@ export const AuthorTicketDetail: React.FC<AuthorTicketDetailProps> = ({
         <button
           type="button"
           onClick={onBack}
-          className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground font-medium"
+          className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground font-medium px-2.5 py-1 rounded-full hover:bg-muted/60 transition-colors"
         >
           <ArrowLeft className="h-3.5 w-3.5" />
           <span>Back to Tickets</span>
@@ -102,10 +102,10 @@ export const AuthorTicketDetail: React.FC<AuthorTicketDetailProps> = ({
           <span className="font-mono text-xs font-semibold text-foreground">
             {ticket.ticketNumber}
           </span>
-          <span className="text-[11px] px-2 py-0.5 rounded bg-muted text-muted-foreground border border-border">
+          <span className="text-[11px] px-2.5 py-0.5 rounded-full bg-muted text-muted-foreground border border-border font-mono">
             {ticket.priority}
           </span>
-          <span className="text-[11px] px-2 py-0.5 rounded bg-muted text-foreground border border-border">
+          <span className="text-[11px] px-2.5 py-0.5 rounded-full bg-secondary text-secondary-foreground font-semibold shadow-2xs">
             {ticket.status}
           </span>
         </div>

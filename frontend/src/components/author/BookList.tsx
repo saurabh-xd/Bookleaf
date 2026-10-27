@@ -106,7 +106,7 @@ export const BookList: React.FC<BookListProps> = ({ books, onRaiseTicketForBook 
                         {book.genre} &bull; {book.bookCode}
                       </p>
                     </div>
-                    <span className="text-[11px] font-medium px-2 py-0.5 rounded bg-muted text-foreground border border-border">
+                    <span className="text-[11px] font-medium px-2.5 py-0.5 rounded-full bg-secondary text-secondary-foreground shadow-2xs">
                       {book.status}
                     </span>
                   </div>
@@ -161,7 +161,7 @@ export const BookList: React.FC<BookListProps> = ({ books, onRaiseTicketForBook 
                       {book.availableOn.map((channel) => (
                         <span
                           key={channel}
-                          className="px-1.5 py-0.5 rounded bg-muted text-foreground text-[10px]"
+                          className="px-2 py-0.5 rounded-full bg-secondary/50 text-secondary-foreground text-[10px] font-medium"
                         >
                           {channel}
                         </span>
@@ -179,7 +179,7 @@ export const BookList: React.FC<BookListProps> = ({ books, onRaiseTicketForBook 
                     <button
                       type="button"
                       onClick={() => onRaiseTicketForBook(book)}
-                      className="px-2.5 py-1 text-xs font-medium rounded-md border border-border hover:bg-muted text-foreground transition-colors"
+                      className="px-3.5 py-1 text-xs font-medium rounded-full bg-primary text-primary-foreground hover:bg-primary/90 shadow-2xs transition-all cursor-pointer"
                     >
                       Query for Book
                     </button>

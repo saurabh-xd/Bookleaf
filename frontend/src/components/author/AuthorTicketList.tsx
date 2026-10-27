@@ -29,15 +29,22 @@ export const AuthorTicketList: React.FC<AuthorTicketListProps> = ({
 
   const getPriorityBadge = (priority: Priority) => {
     return (
-      <span className="text-[11px] font-mono px-2 py-0.5 rounded bg-muted text-muted-foreground border border-border">
+      <span className="text-[11px] font-mono px-2 py-0.5 rounded-full bg-muted/80 text-muted-foreground border border-border">
         {priority}
       </span>
     );
   };
 
   const getStatusBadge = (status: TicketStatus) => {
+    const isPending = status === "OPEN" || status === "IN_PROGRESS";
     return (
-      <span className="text-[11px] font-medium px-2 py-0.5 rounded bg-muted text-foreground border border-border">
+      <span
+        className={`text-[11px] font-medium px-2.5 py-0.5 rounded-full shadow-2xs ${
+          isPending
+            ? "bg-secondary text-secondary-foreground"
+            : "bg-muted text-muted-foreground"
+        }`}
+      >
         {status}
       </span>
     );
@@ -85,7 +92,7 @@ export const AuthorTicketList: React.FC<AuthorTicketListProps> = ({
         <button
           type="button"
           onClick={onOpenCreateModal}
-          className="px-3.5 py-1.5 rounded-md text-xs font-medium bg-primary text-primary-foreground hover:opacity-90 transition-opacity self-start sm:self-auto"
+          className="px-4 py-1.5 rounded-full text-xs font-medium bg-primary text-primary-foreground hover:bg-primary/90 shadow-2xs transition-all self-start sm:self-auto cursor-pointer"
         >
           New Ticket
         </button>

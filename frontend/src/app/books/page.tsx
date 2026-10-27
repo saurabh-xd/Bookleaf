@@ -124,7 +124,7 @@ export default function MyBooksPage() {
                 My Books
               </h1>
               {user.authorCode && (
-                <span className="font-mono text-xs px-2 py-0.5 rounded bg-muted text-muted-foreground border border-border">
+                <span className="font-mono text-xs px-2.5 py-0.5 rounded-full bg-secondary/60 text-secondary-foreground font-medium border border-secondary/60">
                   {user.authorCode}
                 </span>
               )}
@@ -139,7 +139,7 @@ export default function MyBooksPage() {
               type="button"
               onClick={() => loadBooksData(true)}
               disabled={isRefreshing || isLoading}
-              className="p-2 text-xs rounded-md border border-border bg-card hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
+              className="p-2 text-xs rounded-full border border-border bg-card hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
               title="Refresh"
             >
               <RefreshCw className={`h-3.5 w-3.5 ${isRefreshing ? "animate-spin" : ""}`} />
@@ -148,7 +148,7 @@ export default function MyBooksPage() {
             <button
               type="button"
               onClick={() => handleOpenQueryModal()}
-              className="px-3.5 py-1.5 rounded-md text-xs font-medium bg-primary text-primary-foreground hover:opacity-90 transition-opacity"
+              className="px-4 py-1.5 rounded-full text-xs font-medium bg-primary text-primary-foreground hover:bg-primary/90 shadow-2xs transition-all cursor-pointer"
             >
               New Ticket
             </button>

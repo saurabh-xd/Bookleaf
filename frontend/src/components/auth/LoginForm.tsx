@@ -37,7 +37,10 @@ export const LoginForm: React.FC = () => {
     <div className="min-h-[80vh] flex items-center justify-center px-4 py-8">
       <div className="w-full max-w-sm space-y-4">
         {/* Brand Header */}
-        <div className="text-center space-y-1">
+        <div className="text-center space-y-1.5">
+          <div className="inline-flex h-9 w-9 rounded-xl bg-primary text-primary-foreground items-center justify-center font-bold text-sm shadow-2xs mx-auto">
+            B
+          </div>
           <h1 className="text-xl font-semibold text-foreground">
             BookLeaf Portal
           </h1>
@@ -47,7 +50,7 @@ export const LoginForm: React.FC = () => {
         </div>
 
         {/* Login Card */}
-        <div className="bg-card border border-border rounded-lg p-5 shadow-xs">
+        <div className="bg-card border border-border rounded-xl p-5 shadow-xs">
           {error && (
             <div className="mb-4 p-2.5 rounded bg-destructive/10 text-destructive text-xs">
               {error}
@@ -88,7 +91,7 @@ export const LoginForm: React.FC = () => {
             <button
               type="submit"
               disabled={isSubmitting}
-              className="w-full py-2 px-3 rounded-md text-xs font-medium bg-primary text-primary-foreground hover:opacity-90 disabled:opacity-50 flex items-center justify-center gap-1.5"
+              className="w-full py-2 px-3 rounded-full text-xs font-semibold bg-primary text-primary-foreground hover:bg-primary/90 shadow-2xs disabled:opacity-50 flex items-center justify-center gap-1.5 transition-all cursor-pointer"
             >
               {isSubmitting ? (
                 <>

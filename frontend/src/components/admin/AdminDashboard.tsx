@@ -235,7 +235,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
           type="button"
           onClick={() => loadTickets(true)}
           disabled={isRefreshing || isLoading}
-          className="p-2 text-xs rounded-md border border-border bg-card hover:bg-muted text-muted-foreground hover:text-foreground transition-colors self-start sm:self-auto"
+          className="p-2 text-xs rounded-full border border-border bg-card hover:bg-secondary/40 text-foreground transition-all shadow-2xs self-start sm:self-auto cursor-pointer"
           title="Refresh"
         >
           <RefreshCw className={`h-3.5 w-3.5 ${isRefreshing ? "animate-spin" : ""}`} />
@@ -244,24 +244,24 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
 
       {/* Stat Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-        <div className="bg-card border border-border rounded-lg p-4">
+        <div className="bg-card border border-border rounded-xl p-4 shadow-2xs hover:border-secondary/60 transition-all">
           <span className="text-xs font-medium text-muted-foreground">Active Queue</span>
-          <p className="text-2xl font-semibold text-foreground mt-2">{counts.total}</p>
+          <p className="text-2xl font-bold text-foreground mt-2">{counts.total}</p>
         </div>
 
-        <div className="bg-card border border-border rounded-lg p-4">
+        <div className="bg-card border border-border rounded-xl p-4 shadow-2xs hover:border-secondary/60 transition-all">
           <span className="text-xs font-medium text-muted-foreground">Critical (&lt;4h)</span>
-          <p className="text-2xl font-semibold text-destructive mt-2">{counts.critical}</p>
+          <p className="text-2xl font-bold text-destructive mt-2">{counts.critical}</p>
         </div>
 
-        <div className="bg-card border border-border rounded-lg p-4">
-          <span className="text-xs font-medium text-muted-foreground">Overdue</span>
-          <p className="text-2xl font-semibold text-amber-600 dark:text-amber-400 mt-2">{counts.breached}</p>
+        <div className="bg-secondary/25 dark:bg-secondary/15 border border-secondary/60 rounded-xl p-4 shadow-2xs transition-all">
+          <span className="text-xs font-semibold text-secondary-foreground">Overdue Breached</span>
+          <p className="text-2xl font-bold text-secondary-foreground mt-2">{counts.breached}</p>
         </div>
 
-        <div className="bg-card border border-border rounded-lg p-4">
+        <div className="bg-card border border-border rounded-xl p-4 shadow-2xs hover:border-secondary/60 transition-all">
           <span className="text-xs font-medium text-muted-foreground">AI Triage</span>
-          <p className="text-2xl font-semibold text-foreground mt-2">100%</p>
+          <p className="text-2xl font-bold text-foreground mt-2">100%</p>
         </div>
       </div>
 

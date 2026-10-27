@@ -27,43 +27,46 @@ export const Navbar: React.FC<NavbarProps> = ({ sseConnected = false }) => {
         {/* Brand & Left Navigation */}
         <div className="flex items-center gap-6">
           <Link href="/" className="flex items-center gap-2">
+            <div className="h-6 w-6 rounded-md bg-primary text-primary-foreground flex items-center justify-center font-bold text-xs shadow-2xs">
+              B
+            </div>
             <span className="font-semibold text-base text-foreground tracking-tight">
               BookLeaf
             </span>
-            <span className="text-xs px-1.5 py-0.5 rounded bg-muted text-muted-foreground font-medium">
+            <span className="text-[11px] px-2.5 py-0.5 rounded-full bg-secondary text-secondary-foreground font-medium shadow-2xs">
               Portal
             </span>
           </Link>
 
           {/* Navigation for Authors */}
           {user && isAuthor && (
-            <nav className="hidden sm:flex items-center gap-1 text-xs">
+            <nav className="hidden sm:flex items-center gap-1.5 text-xs">
               <Link
                 href="/"
-                className={`px-2.5 py-1.5 rounded-md font-medium transition-colors ${
+                className={`px-3 py-1 rounded-full font-medium transition-all ${
                   pathname === "/"
-                    ? "bg-muted text-foreground"
-                    : "text-muted-foreground hover:text-foreground"
+                    ? "bg-secondary text-secondary-foreground shadow-2xs"
+                    : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
                 }`}
               >
                 Overview
               </Link>
               <Link
                 href="/books"
-                className={`px-2.5 py-1.5 rounded-md font-medium transition-colors ${
+                className={`px-3 py-1 rounded-full font-medium transition-all ${
                   pathname.startsWith("/books")
-                    ? "bg-muted text-foreground"
-                    : "text-muted-foreground hover:text-foreground"
+                    ? "bg-secondary text-secondary-foreground shadow-2xs"
+                    : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
                 }`}
               >
                 My Books
               </Link>
               <Link
                 href="/tickets"
-                className={`px-2.5 py-1.5 rounded-md font-medium transition-colors ${
+                className={`px-3 py-1 rounded-full font-medium transition-all ${
                   pathname.startsWith("/tickets")
-                    ? "bg-muted text-foreground"
-                    : "text-muted-foreground hover:text-foreground"
+                    ? "bg-secondary text-secondary-foreground shadow-2xs"
+                    : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
                 }`}
               >
                 My Tickets
@@ -73,7 +76,7 @@ export const Navbar: React.FC<NavbarProps> = ({ sseConnected = false }) => {
 
           {/* Badge for Admin */}
           {user && isAdmin && (
-            <span className="hidden sm:inline-flex text-xs px-2 py-0.5 rounded bg-muted text-muted-foreground font-mono">
+            <span className="hidden sm:inline-flex text-xs px-2.5 py-0.5 rounded-full bg-secondary text-secondary-foreground font-medium shadow-2xs">
               Operations Desk
             </span>
           )}
@@ -100,20 +103,25 @@ export const Navbar: React.FC<NavbarProps> = ({ sseConnected = false }) => {
 
               {/* User info & Sign out */}
               <div className="flex items-center gap-2 pl-2 border-l border-border">
-                <span className="text-xs text-foreground font-medium hidden sm:inline">
+                <span className="text-xs text-foreground font-medium hidden sm:inline px-2 py-0.5 rounded-full bg-muted border border-border">
                   {user.name}
                 </span>
                 <button
                   type="button"
                   onClick={handleLogout}
-                  className="px-2 py-1 text-xs text-muted-foreground hover:text-foreground hover:bg-muted rounded transition-colors"
+                  className="px-2.5 py-1 text-xs text-muted-foreground hover:text-foreground hover:bg-muted rounded-full transition-colors cursor-pointer"
                 >
                   Sign Out
                 </button>
               </div>
             </>
           ) : (
-            <span className="text-xs text-muted-foreground">Sign In</span>
+            <Link
+              href="/login"
+              className="px-3.5 py-1 text-xs font-medium rounded-full bg-primary text-primary-foreground hover:bg-primary/90 shadow-2xs transition-all"
+            >
+              Sign In
+            </Link>
           )}
         </div>
       </div>

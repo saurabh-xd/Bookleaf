@@ -139,7 +139,7 @@ export const RaiseTicketModal: React.FC<RaiseTicketModalProps> = ({
 
           {/* Quick Topics */}
           <div>
-            <span className="text-[11px] text-muted-foreground mb-1.5 block">
+            <span className="text-[11px] text-muted-foreground mb-1.5 block font-medium">
               Quick Suggestions:
             </span>
             <div className="flex flex-wrap gap-1.5">
@@ -148,7 +148,7 @@ export const RaiseTicketModal: React.FC<RaiseTicketModalProps> = ({
                   key={topic}
                   type="button"
                   onClick={() => setSubject(topic)}
-                  className="text-xs px-2 py-0.5 rounded bg-muted hover:bg-muted/80 text-muted-foreground hover:text-foreground"
+                  className="text-xs px-2.5 py-1 rounded-full bg-secondary/50 hover:bg-secondary text-secondary-foreground font-medium transition-colors shadow-2xs"
                 >
                   {topic}
                 </button>
@@ -219,14 +219,14 @@ export const RaiseTicketModal: React.FC<RaiseTicketModalProps> = ({
               type="button"
               onClick={onClose}
               disabled={isSubmitting}
-              className="px-3 py-1.5 rounded-md text-xs text-muted-foreground hover:text-foreground"
+              className="px-3.5 py-1.5 rounded-full text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={isSubmitting}
-              className="px-4 py-1.5 rounded-md text-xs font-medium bg-primary text-primary-foreground hover:opacity-90 disabled:opacity-50 flex items-center gap-1.5"
+              className="px-5 py-2 rounded-full text-xs font-semibold bg-primary text-primary-foreground hover:bg-primary/90 shadow-2xs disabled:opacity-50 flex items-center gap-1.5 transition-all cursor-pointer"
             >
               {isSubmitting ? (
                 <>

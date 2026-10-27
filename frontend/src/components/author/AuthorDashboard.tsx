@@ -128,7 +128,7 @@ export const AuthorDashboard: React.FC<AuthorDashboardProps> = ({ lastSSEEvent }
               {user?.name || "Author Portal"}
             </h1>
             {user?.authorCode && (
-              <span className="font-mono text-xs px-2 py-0.5 rounded bg-muted text-muted-foreground border border-border">
+              <span className="font-mono text-xs px-2.5 py-0.5 rounded-full bg-secondary/60 text-secondary-foreground font-medium border border-secondary/60">
                 {user.authorCode}
               </span>
             )}
@@ -146,7 +146,7 @@ export const AuthorDashboard: React.FC<AuthorDashboardProps> = ({ lastSSEEvent }
               loadTickets();
             }}
             disabled={isRefreshing || isLoadingBooks}
-            className="p-2 text-xs rounded-md border border-border bg-card hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
+            className="p-2 text-xs rounded-full border border-border bg-card hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
             title="Refresh"
           >
             <RefreshCw className={`h-3.5 w-3.5 ${isRefreshing ? "animate-spin" : ""}`} />
@@ -155,7 +155,7 @@ export const AuthorDashboard: React.FC<AuthorDashboardProps> = ({ lastSSEEvent }
           <button
             type="button"
             onClick={() => handleOpenTicketModal()}
-            className="px-3.5 py-1.5 rounded-md text-xs font-medium bg-primary text-primary-foreground hover:opacity-90 transition-opacity"
+            className="px-4 py-1.5 rounded-full text-xs font-medium bg-primary text-primary-foreground hover:bg-primary/90 shadow-2xs transition-all cursor-pointer"
           >
             New Ticket
           </button>
@@ -180,17 +180,17 @@ export const AuthorDashboard: React.FC<AuthorDashboardProps> = ({ lastSSEEvent }
       <RoyaltySummary summary={summary} />
 
       {/* Tabs */}
-      <div className="border-b border-border flex items-center gap-4">
+      <div className="flex items-center gap-1 bg-card/80 p-1 rounded-full border border-border w-fit shadow-2xs">
         <button
           type="button"
           onClick={() => {
             setActiveTab("catalog");
             setSelectedTicket(null);
           }}
-          className={`pb-2 text-xs font-medium border-b-2 transition-colors ${
+          className={`px-4 py-1.5 rounded-full text-xs font-medium transition-all ${
             activeTab === "catalog"
-              ? "border-primary text-foreground"
-              : "border-transparent text-muted-foreground hover:text-foreground"
+              ? "bg-secondary text-secondary-foreground shadow-2xs"
+              : "text-muted-foreground hover:text-foreground hover:bg-muted/60"
           }`}
         >
           My Books ({books.length})
@@ -199,10 +199,10 @@ export const AuthorDashboard: React.FC<AuthorDashboardProps> = ({ lastSSEEvent }
         <button
           type="button"
           onClick={() => setActiveTab("tickets")}
-          className={`pb-2 text-xs font-medium border-b-2 transition-colors ${
+          className={`px-4 py-1.5 rounded-full text-xs font-medium transition-all ${
             activeTab === "tickets"
-              ? "border-primary text-foreground"
-              : "border-transparent text-muted-foreground hover:text-foreground"
+              ? "bg-secondary text-secondary-foreground shadow-2xs"
+              : "text-muted-foreground hover:text-foreground hover:bg-muted/60"
           }`}
         >
           My Tickets ({tickets.length})

@@ -74,10 +74,10 @@ export const UrgencyFilters: React.FC<UrgencyFiltersProps> = ({
                 breachedOnly: false,
               })
             }
-            className={`text-xs px-2.5 py-1 rounded-md border font-medium transition-colors ${
+            className={`text-xs px-3 py-1 rounded-full border font-medium transition-all shadow-2xs ${
               filters.priority === "CRITICAL"
                 ? "bg-destructive text-destructive-foreground border-destructive"
-                : "border-border bg-card hover:bg-muted text-muted-foreground hover:text-foreground"
+                : "border-border bg-card hover:bg-secondary/40 text-foreground"
             }`}
           >
             Critical ({counts.critical})
@@ -91,10 +91,10 @@ export const UrgencyFilters: React.FC<UrgencyFiltersProps> = ({
                 priority: "ALL",
               })
             }
-            className={`text-xs px-2.5 py-1 rounded-md border font-medium transition-colors ${
+            className={`text-xs px-3 py-1 rounded-full border font-medium transition-all shadow-2xs ${
               filters.breachedOnly
-                ? "bg-amber-600 text-white border-amber-600"
-                : "border-border bg-card hover:bg-muted text-muted-foreground hover:text-foreground"
+                ? "bg-secondary text-secondary-foreground border-secondary font-semibold"
+                : "border-border bg-card hover:bg-secondary/40 text-foreground"
             }`}
           >
             Overdue ({counts.breached})
@@ -117,7 +117,7 @@ export const UrgencyFilters: React.FC<UrgencyFiltersProps> = ({
         <select
           value={filters.status}
           onChange={(e) => update({ status: e.target.value })}
-          className="bg-card text-foreground border border-border rounded-md px-2 py-1 focus:outline-none focus:ring-1 focus:ring-ring cursor-pointer"
+          className="bg-card text-foreground border border-border rounded-full px-3 py-1 focus:outline-none focus:ring-1 focus:ring-ring hover:border-secondary/60 cursor-pointer transition-colors shadow-2xs"
         >
           <option value="ALL">All Statuses</option>
           <option value="OPEN">Open</option>
@@ -129,7 +129,7 @@ export const UrgencyFilters: React.FC<UrgencyFiltersProps> = ({
         <select
           value={filters.priority}
           onChange={(e) => update({ priority: e.target.value })}
-          className="bg-card text-foreground border border-border rounded-md px-2 py-1 focus:outline-none focus:ring-1 focus:ring-ring cursor-pointer"
+          className="bg-card text-foreground border border-border rounded-full px-3 py-1 focus:outline-none focus:ring-1 focus:ring-ring hover:border-secondary/60 cursor-pointer transition-colors shadow-2xs"
         >
           <option value="ALL">All Priorities</option>
           <option value="CRITICAL">Critical (&lt;4h)</option>
@@ -141,7 +141,7 @@ export const UrgencyFilters: React.FC<UrgencyFiltersProps> = ({
         <select
           value={filters.category}
           onChange={(e) => update({ category: e.target.value })}
-          className="bg-card text-foreground border border-border rounded-md px-2 py-1 focus:outline-none focus:ring-1 focus:ring-ring cursor-pointer"
+          className="bg-card text-foreground border border-border rounded-full px-3 py-1 focus:outline-none focus:ring-1 focus:ring-ring hover:border-secondary/60 cursor-pointer transition-colors shadow-2xs"
         >
           <option value="ALL">All Categories</option>
           <option value="ROYALTY_PAYMENTS">Royalty Payments</option>
@@ -157,7 +157,7 @@ export const UrgencyFilters: React.FC<UrgencyFiltersProps> = ({
           <select
             value={filters.sortBy}
             onChange={(e) => update({ sortBy: e.target.value as any })}
-            className="bg-card text-foreground border border-border rounded-md px-2 py-1 focus:outline-none focus:ring-1 focus:ring-ring cursor-pointer"
+            className="bg-card text-foreground border border-border rounded-full px-3 py-1 focus:outline-none focus:ring-1 focus:ring-ring hover:border-secondary/60 cursor-pointer transition-colors shadow-2xs"
           >
             <option value="urgent">Urgency First</option>
             <option value="newest">Newest First</option>
