@@ -47,18 +47,26 @@ const heuristicTriage = (subject: string, description: string): TriageResult => 
     text.includes("sold") ||
     text.includes("earnings")
   ) {
-    const isCritical =
-      text.includes("months") ||
+    const isProlongedDelay =
+      (text.includes("months") && (text.includes("haven't received") || text.includes("not received") || text.includes("unpaid") || text.includes("no royalt") || text.includes("pending") || text.includes("delay"))) ||
+      text.includes("6 months") ||
+      text.includes("critical") ||
+      text.includes("urgent");
+
+    const isHigh =
       text.includes("haven't received") ||
       text.includes("not received") ||
       text.includes("unpaid") ||
-      text.includes("delay");
+      text.includes("delay") ||
+      text.includes("months");
 
     return {
       category: "ROYALTY_PAYMENTS",
-      priority: isCritical ? "HIGH" : "MEDIUM",
-      confidenceScore: 0.9,
-      reasoning: "Matched royalty and payment inquiries; flagged for finance review.",
+      priority: isProlongedDelay ? "CRITICAL" : isHigh ? "HIGH" : "MEDIUM",
+      confidenceScore: isProlongedDelay ? 0.96 : 0.9,
+      reasoning: isProlongedDelay
+        ? "Flagged as CRITICAL priority due to severe royalty delay (> 3 months)."
+        : "Matched royalty and payment inquiries; flagged for finance review.",
       source: "HEURISTIC_FALLBACK",
     };
   }

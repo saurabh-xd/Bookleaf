@@ -2,7 +2,6 @@
 
 import React from "react";
 import type { Ticket, TicketStatus } from "../../types/index";
-import { SLAIndicator } from "./SLAIndicator";
 
 interface AdminQueueProps {
   tickets: Ticket[];
@@ -20,6 +19,25 @@ export const AdminQueue: React.FC<AdminQueueProps> = ({
       .split("_")
       .map((w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
       .join(" ");
+  };
+
+  const getPriorityBadge = (priority: string) => {
+    const colorStyles: Record<string, string> = {
+      CRITICAL: "bg-rose-500/15 text-rose-700 dark:text-rose-300 border-rose-500/30",
+      HIGH: "bg-amber-500/15 text-amber-700 dark:text-amber-300 border-amber-500/30",
+      MEDIUM: "bg-sky-500/15 text-sky-700 dark:text-sky-300 border-sky-500/30",
+      LOW: "bg-slate-500/15 text-slate-700 dark:text-slate-300 border-slate-500/30",
+    };
+
+    const style = colorStyles[priority] || colorStyles.LOW;
+
+    return (
+      <span
+        className={`inline-flex items-center text-[11px] font-semibold px-2 py-0.5 rounded-full border shadow-2xs ${style}`}
+      >
+        {priority}
+      </span>
+    );
   };
 
   const getStatusBadge = (status: TicketStatus) => {
@@ -86,12 +104,7 @@ export const AdminQueue: React.FC<AdminQueueProps> = ({
                   <span className="font-mono text-xs font-semibold text-foreground">
                     {ticket.ticketNumber}
                   </span>
-                  <SLAIndicator
-                    createdAt={ticket.createdAt}
-                    priority={ticket.priority}
-                    status={ticket.status}
-                    compact
-                  />
+                  {getPriorityBadge(ticket.priority)}
                   {getStatusBadge(ticket.status)}
                   <span className="text-xs text-muted-foreground">
                     {formatCategory(ticket.category)}

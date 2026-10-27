@@ -103,9 +103,6 @@ export const AuthorTicketDetail: React.FC<AuthorTicketDetailProps> = ({
           <span className="font-mono text-xs font-semibold text-foreground">
             {ticket.ticketNumber}
           </span>
-          <span className="text-[11px] px-2.5 py-0.5 rounded-full bg-muted text-muted-foreground border border-border font-mono">
-            {ticket.priority}
-          </span>
           <span className="text-[11px] px-2.5 py-0.5 rounded-full bg-secondary text-secondary-foreground font-semibold shadow-2xs">
             {ticket.status}
           </span>

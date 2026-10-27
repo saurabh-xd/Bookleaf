@@ -128,7 +128,6 @@ export const AuthorTicketList: React.FC<AuthorTicketListProps> = ({
                     <span className="text-xs text-muted-foreground">
                       {formatCategory(ticket.category)}
                     </span>
-                    {getPriorityBadge(ticket.priority)}
                   </div>
 
                   <div className="flex items-center gap-2">

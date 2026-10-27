@@ -9,10 +9,10 @@ import type {
   TicketCategory,
 } from "../../types/index";
 import { api } from "../../lib/api";
-import { SLAIndicator } from "./SLAIndicator";
 import { useAuth } from "../../context/AuthContext";
 import { ArrowLeft, Send, RefreshCw, Lock, CheckCheck } from "lucide-react";
 import { FormattedMessage, stripStars } from "../../lib/formatMessage";
+import toast from "react-hot-toast";
 
 interface TicketResolutionWorkspaceProps {
   ticket: Ticket;
@@ -115,9 +115,11 @@ export const TicketResolutionWorkspace: React.FC<TicketResolutionWorkspaceProps>
       if (res.success && res.data) {
         setTicket(res.data);
         onTicketUpdated(res.data);
+        toast.success(`Priority updated to ${newPriority}`);
       }
     } catch (err: any) {
       setError(err?.message || "Failed to update priority");
+      toast.error(err?.message || "Failed to update priority");
     } finally {
       setIsUpdatingStatus(false);
     }
@@ -231,11 +233,19 @@ export const TicketResolutionWorkspace: React.FC<TicketResolutionWorkspaceProps>
           <span className="font-mono text-xs font-semibold text-foreground">
             {ticket.ticketNumber}
           </span>
-          <SLAIndicator
-            createdAt={ticket.createdAt}
-            priority={ticket.priority}
-            status={ticket.status}
-          />
+          <span
+            className={`inline-flex items-center text-[11px] font-semibold px-2.5 py-0.5 rounded-full border shadow-2xs ${
+              ticket.priority === "CRITICAL"
+                ? "bg-rose-500/15 text-rose-700 dark:text-rose-300 border-rose-500/30"
+                : ticket.priority === "HIGH"
+                ? "bg-amber-500/15 text-amber-700 dark:text-amber-300 border-amber-500/30"
+                : ticket.priority === "MEDIUM"
+                ? "bg-sky-500/15 text-sky-700 dark:text-sky-300 border-sky-500/30"
+                : "bg-slate-500/15 text-slate-700 dark:text-slate-300 border-slate-500/30"
+            }`}
+          >
+            {ticket.priority}
+          </span>
         </div>
       </div>
 
@@ -273,10 +283,25 @@ export const TicketResolutionWorkspace: React.FC<TicketResolutionWorkspaceProps>
           >
             {PRIORITIES.map((p) => (
               <option key={p} value={p}>
-                {p}
+                {p} {ticket.aiPriority === p && !ticket.isPriorityOverridden ? "(AI Score)" : ""}
               </option>
             ))}
           </select>
+          {ticket.isPriorityOverridden ? (
+            <span
+              title={`Originally classified as ${ticket.aiPriority || "None"} by AI`}
+              className="text-[10px] font-medium text-amber-600 dark:text-amber-400 bg-amber-500/10 px-1.5 py-0.5 rounded border border-amber-500/20"
+            >
+              Overridden
+            </span>
+          ) : (
+            <span
+              title="Automatically assigned by AI based on ticket contents"
+              className="text-[10px] font-medium text-secondary bg-secondary/10 px-1.5 py-0.5 rounded border border-secondary/20"
+            >
+              AI Score
+            </span>
+          )}
         </div>
 
         <div className="flex items-center gap-1.5">
@@ -514,8 +539,98 @@ export const TicketResolutionWorkspace: React.FC<TicketResolutionWorkspaceProps>
           </form>
         </div>
 
-        {/* Right Column (4 cols): AI Draft */}
-        <div className="lg:col-span-4 space-y-3">
+        {/* Right Column (4 cols): AI Priority & AI Draft */}
+        <div className="lg:col-span-4 space-y-4">
+          {/* AI Priority & Triage Card */}
+          <div className="bg-card border border-border rounded-xl p-4 space-y-3 shadow-xs">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-semibold text-foreground">
+                AI Priority & Urgency
+              </span>
+              {ticket.aiConfidenceScore && (
+                <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-muted text-muted-foreground border border-border/50">
+                  {Math.round(ticket.aiConfidenceScore * 100)}% match
+                </span>
+              )}
+            </div>
+
+            <div className="p-3 rounded-lg bg-muted/40 border border-border/60 space-y-2">
+              <div className="flex items-center justify-between text-xs">
+                <span className="text-muted-foreground">AI Scored Priority:</span>
+                <span className="font-semibold text-foreground">
+                  {ticket.aiPriority || "Assigned by AI"}
+                </span>
+              </div>
+
+              <div className="flex items-center justify-between text-xs">
+                <span className="text-muted-foreground">Effective Priority:</span>
+                <span
+                  className={`text-[11px] font-bold px-2 py-0.5 rounded-full border ${
+                    ticket.priority === "CRITICAL"
+                      ? "bg-rose-500/15 text-rose-700 dark:text-rose-300 border-rose-500/30"
+                      : ticket.priority === "HIGH"
+                      ? "bg-amber-500/15 text-amber-700 dark:text-amber-300 border-amber-500/30"
+                      : ticket.priority === "MEDIUM"
+                      ? "bg-sky-500/15 text-sky-700 dark:text-sky-300 border-sky-500/30"
+                      : "bg-slate-500/15 text-slate-700 dark:text-slate-300 border-slate-500/30"
+                  }`}
+                >
+                  {ticket.priority}
+                </span>
+              </div>
+
+              <div className="flex items-center justify-between text-xs pt-1 border-t border-border/40">
+                <span className="text-muted-foreground">Triage Status:</span>
+                <span className="text-[11px]">
+                  {ticket.isPriorityOverridden ? (
+                    <span className="text-amber-600 dark:text-amber-400 font-medium">
+                      Admin Overridden
+                    </span>
+                  ) : (
+                    <span className="text-emerald-600 dark:text-emerald-400 font-medium">
+                      AI Auto-Assigned
+                    </span>
+                  )}
+                </span>
+              </div>
+            </div>
+
+            <div className="space-y-1.5 pt-1">
+              <label className="text-[11px] font-medium text-muted-foreground block">
+                Admin Override Priority:
+              </label>
+              <div className="grid grid-cols-4 gap-1.5">
+                {PRIORITIES.map((p) => {
+                  const isSelected = ticket.priority === p;
+                  return (
+                    <button
+                      key={p}
+                      type="button"
+                      disabled={isUpdatingStatus}
+                      onClick={() => handlePriorityChange(p)}
+                      className={`text-[11px] font-semibold py-1.5 px-1 rounded-lg border transition-all cursor-pointer text-center ${
+                        isSelected
+                          ? p === "CRITICAL"
+                            ? "bg-rose-600 text-white border-rose-700 shadow-2xs"
+                            : p === "HIGH"
+                            ? "bg-amber-600 text-white border-amber-700 shadow-2xs"
+                            : p === "MEDIUM"
+                            ? "bg-sky-600 text-white border-sky-700 shadow-2xs"
+                            : "bg-slate-700 text-white border-slate-800 shadow-2xs"
+                          : "bg-card hover:bg-muted text-muted-foreground border-border"
+                      }`}
+                    >
+                      {p}
+                    </button>
+                  );
+                })}
+              </div>
+              <p className="text-[10px] text-muted-foreground leading-tight pt-1">
+                Admin overrides dynamically recalculate the SLA response countdown timer.
+              </p>
+            </div>
+          </div>
+
           <div className="bg-card border border-border rounded-lg p-4 space-y-3 sticky top-4">
             <div className="flex items-center justify-between text-xs">
               <span className="font-semibold text-foreground">AI Draft</span>
